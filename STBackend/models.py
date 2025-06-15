@@ -12,6 +12,7 @@ class GenderEnum(str, Enum):
 
 class ListingCreate(BaseModel):
     user_id: int
+    is_active: Optional[bool] = True
     location_id: int
     start_date: date
     end_date: date
