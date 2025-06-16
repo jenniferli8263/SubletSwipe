@@ -85,3 +85,50 @@ async def create_listing(listing: ListingCreate):
         return {"message": "Listing created", "id": new_id}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error: {str(e)}")
+
+@router.get("/listings/{listing_id}")
+async def get_listing(listing_id: int):
+    query = """
+        SELECT 
+            l.id,
+            l.user_id,
+            u.first_name || ' ' || u.last_name AS poster_name,
+            u.email AS poster_email,
+            l.is_active,
+            l.start_date,
+            l.end_date,
+            l.tenant_gender,
+            l.asking_price,
+            l.num_bedrooms,
+            l.num_bathrooms,
+            l.pet_friendly,
+            l.utilities_incl,
+            l.description,
+            loc.address_string,
+            loc.latitude,
+            loc.longitude,
+            bt.type AS building_type,
+            COALESCE(
+                (SELECT json_agg(json_build_object('url', p.url, 'label', p.label))
+                 FROM photos p
+                 WHERE p.listing_id = l.id), '[]'
+            ) AS photos,
+            COALESCE(
+                (SELECT json_agg(a.name)
+                 FROM listing_amenities la
+                 JOIN amenities a ON la.amenity_id = a.id
+                 WHERE la.listing_id = l.id), '[]'
+            ) AS amenities
+        FROM listings l
+        JOIN users u ON l.user_id = u.id
+        JOIN locations loc ON l.location_id = loc.id
+        LEFT JOIN building_types bt ON l.building_type_id = bt.id
+        WHERE l.id = $1
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        row = await connection.fetchrow(query, listing_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        return dict(row)
