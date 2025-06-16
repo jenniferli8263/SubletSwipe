@@ -3,6 +3,7 @@
 
 # Python (Backend)
 STBackend/__pycache__/
+STBackend/routes/__pycache__/
 STBackend/*.pyc
 STBackend/*.pyo
 STBackend/*.pyd
