@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+
+# Python (Backend)
+STBackend/__pycache__/
+STBackend/*.pyc
+STBackend/*.pyo
+STBackend/*.pyd
+STBackend/.Python
+STBackend/env/
+STBackend/venv/
+STBackend/*.sqlite3
+STBackend/*.db
+STBackend/.env
+STBackend/.env.*
+
+# Node/Expo (Frontend)
+STFrontend/node_modules/
+STFrontend/.expo/
+STFrontend/dist/
+STFrontend/web-build/
+STFrontend/expo-env.d.ts
+STFrontend/.env
+STFrontend/.env*.local
+STFrontend/*.tsbuildinfo
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+venv/
+**/venv/
