@@ -17,3 +17,7 @@ cd STBackend
    Windows: `.\venv\Scripts\activate`
 
 2. Run `pip install -r requirements.txt`
+
+3. To test APIs:
+   * Run `uvicorn server:app --reload` 
+   * go to `http://127.0.0.1:8000/docs`
