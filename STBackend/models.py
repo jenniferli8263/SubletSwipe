@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional
 from datetime import date
 from enum import Enum
 
@@ -9,6 +9,10 @@ class GenderEnum(str, Enum):
     non_binary = "non-binary"
     prefer_not_to_say = "prefer not to say"
     other = "other"
+
+class Photo(BaseModel):
+    url: str
+    label: Optional[str] = None
 
 class ListingCreate(BaseModel):
     user_id: int
@@ -25,3 +29,6 @@ class ListingCreate(BaseModel):
     pet_friendly: bool
     utilities_incl: bool
     description: Optional[str] = None
+    amenities: Optional[List[int]] = []
+    photos: Optional[List[Photo]] = []
+
