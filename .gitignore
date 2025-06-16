@@ -37,6 +37,9 @@ yarn-error.*
 venv/
 **/venv/
 
+venv/
+**/venv/
+
 # Native
 STFrontend/.kotlin/
 STFrontend/*.orig.*
