@@ -15,5 +15,3 @@ cd STBackend
    Mac: `source venv/bin/activate`
 
    Windows: `.\venv\Scripts\activate`
-
-2. Run `pip install -r requirements.txt`

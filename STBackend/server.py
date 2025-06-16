@@ -1,24 +1,18 @@
 from fastapi import FastAPI
-from psycopg2 import connect
-from psycopg2.extras import RealDictCursor
-from dotenv import load_dotenv
-import os
+from contextlib import asynccontextmanager
+from db import init_db, close_db
+from routes import listings, hello
 
-load_dotenv() 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize DB pool
+    await init_db()
+    yield
+    # Shutdown: Close DB pool
+    await close_db()
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+app.include_router(listings.router)
+app.include_router(hello.router)
 
-@app.get("/hello")
-def read_root():
-    try:
-        conn = connect(DATABASE_URL, cursor_factory=RealDictCursor)
-        cur = conn.cursor()
-        cur.execute("SELECT NOW()")
-        result = cur.fetchone()
-        cur.close()
-        conn.close()
-        return {"message": "Hello, world!", "timestamp": result}
-    except Exception as e:
-        return {"error": str(e)}
