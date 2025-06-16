@@ -17,11 +17,10 @@ class Photo(BaseModel):
 class ListingCreate(BaseModel):
     user_id: int
     is_active: Optional[bool] = True
-    location_id: int
+    locations_id: int
     start_date: date
     end_date: date
-    tenant_age: int 
-    tenant_gender: GenderEnum 
+    target_gender: GenderEnum 
     asking_price: float
     building_type_id: Optional[int] = None
     num_bedrooms: int

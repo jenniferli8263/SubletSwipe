@@ -39,8 +39,8 @@ async def insert_listing_photos_bulk(connection, listing_id: int, photos: list[P
 async def insert_listing(listing: ListingCreate) -> int:
     query = """
         INSERT INTO listings (
-            user_id, location_id, start_date, end_date,
-            tenant_age, tenant_gender,
+            user_id, locations_id, start_date, end_date,
+            target_gender,
             asking_price, building_type_id, num_bedrooms, num_bathrooms,
             pet_friendly, utilities_incl, description
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
@@ -52,11 +52,10 @@ async def insert_listing(listing: ListingCreate) -> int:
         async with connection.transaction():
             row = await connection.fetchrow(query,
                 listing.user_id,
-                listing.location_id,
+                listing.locations_id,
                 listing.start_date,
                 listing.end_date,
-                listing.tenant_age,
-                listing.tenant_gender.value,
+                listing.target_gender.value,
                 listing.asking_price,
                 listing.building_type_id,
                 listing.num_bedrooms,
@@ -97,7 +96,7 @@ async def get_listing(listing_id: int):
             l.is_active,
             l.start_date,
             l.end_date,
-            l.tenant_gender,
+            l.target_gender,
             l.asking_price,
             l.num_bedrooms,
             l.num_bathrooms,
@@ -121,7 +120,7 @@ async def get_listing(listing_id: int):
             ) AS amenities
         FROM listings l
         JOIN users u ON l.user_id = u.id
-        JOIN locations loc ON l.location_id = loc.id
+        JOIN locations loc ON l.locations_id = loc.id
         LEFT JOIN building_types bt ON l.building_type_id = bt.id
         WHERE l.id = $1
     """
