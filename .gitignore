@@ -8,7 +8,6 @@ STBackend/*.pyo
 STBackend/*.pyd
 STBackend/.Python
 STBackend/env/
-STBackend/venv/
 STBackend/*.sqlite3
 STBackend/*.db
 STBackend/.env
@@ -37,3 +36,28 @@ yarn-error.*
 
 venv/
 **/venv/
+
+# Native
+STFrontend/.kotlin/
+STFrontend/*.orig.*
+STFrontend/*.jks
+STFrontend/*.p8
+STFrontend/*.p12
+STFrontend/*.key
+STFrontend/*.mobileprovision
+
+# Metro
+STFrontend/.metro-health-check*
+
+# debug
+STFrontend/npm-debug.*
+STFrontend/yarn-debug.*
+STFrontend/yarn-error.*
+
+# local env files
+STFrontend/.env*.local
+
+# typescript
+STFrontend/*.tsbuildinfo
+
+STFrontend/app-example
