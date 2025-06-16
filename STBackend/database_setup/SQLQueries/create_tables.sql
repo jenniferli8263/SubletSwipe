@@ -17,8 +17,8 @@ create table if not exists locations (
     latitude decimal(7,4) not null
 );
 
-create index if not exists idx_location_places_api_id on location(places_api_id);
-create index if not exists idx_location_coords on location(latitude, longitude);
+create index if not exists idx_locations_places_api_id on locations(places_api_id);
+create index if not exists idx_locations_coords on locations(latitude, longitude);
 
 create table if not exists building_types (
     id serial primary key,
@@ -34,7 +34,7 @@ create table if not exists listings (
     id bigserial primary key,
     user_id bigint not null references users(id),
     is_active boolean not null default true,
-    location_id bigint not null references location(id),
+    locations_id bigint not null references locations(id),
     start_date date not null,
     end_date date not null,
     target_gender gender_enum,
@@ -52,14 +52,11 @@ create table if not exists listings (
     constraint chk_term_length check (
         end_date >= start_date + interval '1 month'
         and end_date <= start_date + interval '1 year'
-    ),
-    constraint chk_tenant_age_min check (
-        tenant_age >= 18
     )
 );
 
 create index if not exists idx_listings_user_id on listings(user_id);
-create index if not exists idx_listings_location_id on listings(location_id);
+create index if not exists idx_listings_locations_id on listings(locations_id);
 create index if not exists idx_listings_building_type_id on listings(building_type_id);
 
 create table if not exists photos (
@@ -75,7 +72,7 @@ create table if not exists renter_profiles (
     id bigserial primary key,
     user_id bigint not null references users(id),
     is_active boolean not null default true,
-    location_id bigint not null references location(id),
+    locations_id bigint not null references locations(id),
     start_date date not null,
     end_date date not null,
     age int not null,
@@ -101,7 +98,7 @@ create table if not exists renter_profiles (
 );
 
 create index if not exists idx_renter_profiles_user_id on renter_profiles(user_id);
-create index if not exists idx_renter_profiles_location_id on renter_profiles(location_id);
+create index if not exists idx_renter_profiles_locations_id on renter_profiles(locations_id);
 create index if not exists idx_renter_profiles_building_type_id on renter_profiles(building_type_id);
 
 create table if not exists renter_on_listing (
