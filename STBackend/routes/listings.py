@@ -39,10 +39,10 @@ async def insert_listing_photos_bulk(connection, listing_id: int, photos: list[P
 async def insert_listing(listing: ListingCreate) -> int:
     query = """
         INSERT INTO listings (
-            user_id, locations_id, start_date, end_date,
-            target_gender,
-            asking_price, building_type_id, num_bedrooms, num_bathrooms,
-            pet_friendly, utilities_incl, description
+            user_id, is_active, locations_id, start_date, end_date,
+            target_gender, asking_price, building_type_id,
+            num_bedrooms, num_bathrooms, pet_friendly,
+            utilities_incl, description
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING id
     """
@@ -52,6 +52,7 @@ async def insert_listing(listing: ListingCreate) -> int:
         async with connection.transaction():
             row = await connection.fetchrow(query,
                 listing.user_id,
+                listing.is_active,
                 listing.locations_id,
                 listing.start_date,
                 listing.end_date,
@@ -91,6 +92,7 @@ async def get_listing(listing_id: int):
         SELECT 
             l.id,
             l.user_id,
+            l.locations_id,
             u.first_name || ' ' || u.last_name AS poster_name,
             u.email AS poster_email,
             l.is_active,

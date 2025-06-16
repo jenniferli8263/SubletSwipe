@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional, List
 from datetime import date
 from enum import Enum
 
@@ -12,7 +12,7 @@ class GenderEnum(str, Enum):
 
 class Photo(BaseModel):
     url: str
-    label: Optional[str] = None
+    label: str
 
 class ListingCreate(BaseModel):
     user_id: int
@@ -20,7 +20,7 @@ class ListingCreate(BaseModel):
     locations_id: int
     start_date: date
     end_date: date
-    target_gender: GenderEnum 
+    target_gender: GenderEnum
     asking_price: float
     building_type_id: Optional[int] = None
     num_bedrooms: int
@@ -30,4 +30,3 @@ class ListingCreate(BaseModel):
     description: Optional[str] = None
     amenities: Optional[List[int]] = []
     photos: Optional[List[Photo]] = []
-
