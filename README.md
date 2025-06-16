@@ -2,31 +2,16 @@
 
 ## Backend
 
-Make virtual env (name it venv so you don't have to modify gitignore)
-
-```
-python -m venv venv
-```
-
-
-Mac:
-
 ```
 cd STBackend
-source venv/bin/activate
 ```
 
-Windows:
+1. (Optional) Make a virtual env and activate it (name it venv so you don't have to modify gitignore)
 
-```
-cd STBackend
-.\venv\Scripts\activate
-```
+   ```
+   python -m venv venv
+   ```
 
-Running backend apis:
+   Mac: `source venv/bin/activate`
 
-Windows:
-```
-uvicorn server:app --reload
-```
-then go to http://127.0.0.1:8000/docs to test out apis
+   Windows: `.\venv\Scripts\activate`
