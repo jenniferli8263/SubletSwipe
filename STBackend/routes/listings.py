@@ -39,8 +39,8 @@ async def insert_listing_photos_bulk(connection, listing_id: int, photos: list[P
 async def insert_listing(listing: ListingCreate) -> int:
     query = """
         INSERT INTO listings (
-            user_id, location_id, start_date, end_date,
-            tenant_age, tenant_gender,
+            user_id, locations_id, start_date, end_date,
+            target_gender,
             asking_price, building_type_id, num_bedrooms, num_bathrooms,
             pet_friendly, utilities_incl, description
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
@@ -52,11 +52,10 @@ async def insert_listing(listing: ListingCreate) -> int:
         async with connection.transaction():
             row = await connection.fetchrow(query,
                 listing.user_id,
-                listing.location_id,
+                listing.locations_id,
                 listing.start_date,
                 listing.end_date,
-                listing.tenant_age,
-                listing.tenant_gender.value,
+                listing.target_gender.value,
                 listing.asking_price,
                 listing.building_type_id,
                 listing.num_bedrooms,
@@ -85,3 +84,50 @@ async def create_listing(listing: ListingCreate):
         return {"message": "Listing created", "id": new_id}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error: {str(e)}")
+
+@router.get("/listings/{listing_id}")
+async def get_listing(listing_id: int):
+    query = """
+        SELECT 
+            l.id,
+            l.user_id,
+            u.first_name || ' ' || u.last_name AS poster_name,
+            u.email AS poster_email,
+            l.is_active,
+            l.start_date,
+            l.end_date,
+            l.target_gender,
+            l.asking_price,
+            l.num_bedrooms,
+            l.num_bathrooms,
+            l.pet_friendly,
+            l.utilities_incl,
+            l.description,
+            loc.address_string,
+            loc.latitude,
+            loc.longitude,
+            bt.type AS building_type,
+            COALESCE(
+                (SELECT json_agg(json_build_object('url', p.url, 'label', p.label))
+                 FROM photos p
+                 WHERE p.listing_id = l.id), '[]'
+            ) AS photos,
+            COALESCE(
+                (SELECT json_agg(a.name)
+                 FROM listing_amenities la
+                 JOIN amenities a ON la.amenity_id = a.id
+                 WHERE la.listing_id = l.id), '[]'
+            ) AS amenities
+        FROM listings l
+        JOIN users u ON l.user_id = u.id
+        JOIN locations loc ON l.locations_id = loc.id
+        LEFT JOIN building_types bt ON l.building_type_id = bt.id
+        WHERE l.id = $1
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        row = await connection.fetchrow(query, listing_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        return dict(row)
