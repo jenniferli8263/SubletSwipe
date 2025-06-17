@@ -1,0 +1,74 @@
+-- Feature 1 Output --
+id
+--
+103
+
+
+-- Feature 2 Output --
+id | user_id | is_active | locations_id | start_date | end_date | target_gender | asking_price | building_type_id | num_bedrooms | num_bathrooms | pet_friendly | utilities_incl | description
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+2 | 93 | t | 62 | 2025-08-11 | 2026-01-05 | male | 123321.0 | 3 | 5 | 2 | t | t | Sample listing description 2
+(1 rows)
+
+
+-- Feature 3 Output -- 
+id | user_id | poster_name | poster_email | is_active | start_date | end_date | target_gender | asking_price | num_bedrooms | num_bathrooms | pet_friendly | utilities_incl | description | address_string | latitude | longitude | building_type | photos | amenities
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1 | 52 | First52 Last52 | user52@example.com | f | 2026-05-08 | 2026-07-05 | other | 3598.25 | 1 | 1 | f | t | Sample listing description 1 | 5039 Oak St, Toronto, QC | 43.2848 | -79.4824 | Type 5 | [{"url" : "https://example.com/photo/1_1.jpg", "label" : "living_room"}] | ["Amenity 22"]
+(1 rows)
+
+
+-- Feature 4 Output --
+id | description | address_string | distance_km
+-----------------------------------------------
+101 | Bright and spacious 2-bedroom apartment near campus. Includes in-unit laundry and balcony. | 6127 Walnut Ave, Waterloo, MB | 23.78806845463458
+59 | Sample listing description 59 | 4003 Pine Ave, Ottawa, QC | 24.379404428548767
+87 | Sample listing description 87 | 4003 Pine Ave, Ottawa, QC | 24.379404428548767
+16 | Sample listing description 16 | 1825 Main St, Ottawa, QC | 28.06965297917432
+102 | Sample description for a new listing | 1825 Main St, Ottawa, QC | 28.06965297917432
+54 | Sample listing description 54 | 1825 Main St, Ottawa, QC | 28.06965297917432
+69 | Sample listing description 69 | 526 Walnut Ave, Ottawa, AB | 30.0104464720039
+52 | Sample listing description 52 | 5618 Oak St, Ottawa, MB | 34.19554411436809
+96 | Sample listing description 96 | 54 Elm St, Ottawa, MB | 41.24898018636412
+20 | Sample listing description 20 | 1425 Cedar Blvd, London, ON | 41.92222090172866
+43 | Sample listing description 43 | 1425 Cedar Blvd, London, ON | 41.92222090172866
+36 | Sample listing description 36 | 8480 Maple Rd, Toronto, QC | 42.56192066607933
+63 | Sample listing description 63 | 829 Elm St, Hamilton, ON | 44.108265872178286
+85 | Sample listing description 85 | 189 Elm St, Toronto, MB | 52.090309785608376
+22 | Sample listing description 22 | 36 Maple Rd, Ottawa, AB | 56.70209541311889
+35 | Sample listing description 35 | 1201 Cedar Blvd, Waterloo, MB | 57.9065967875364
+33 | Sample listing description 33 | 772 Walnut Ave, Toronto, QC | 63.9298894374305
+62 | Sample listing description 62 | 772 Walnut Ave, Toronto, QC | 63.9298894374305
+60 | Sample listing description 60 | 772 Walnut Ave, Toronto, QC | 63.9298894374305
+66 | Sample listing description 66 | 3751 Main St, Toronto, BC | 64.45432000654776
+7 | Sample listing description 7 | 8006 Main St, Toronto, BC | 65.0165955058116
+58 | Sample listing description 58 | 8006 Main St, Toronto, BC | 65.0165955058116
+29 | Sample listing description 29 | 8006 Main St, Toronto, BC | 65.0165955058116
+26 | Sample listing description 26 | 4372 Walnut Ave, Ottawa, ON | 65.08504898569434
+90 | Sample listing description 90 | 1170 Cedar Blvd, Waterloo, MB | 68.20299368644943
+40 | Sample listing description 40 | 4334 Walnut Ave, Toronto, AB | 69.78637881646821
+80 | Sample listing description 80 | 6616 Main St, Hamilton, QC | 70.61813645542797
+12 | Sample listing description 11 | 959 Cedar Blvd, Hamilton, ON | 70.91496368299963
+11 | Sample listing description 11 | 959 Cedar Blvd, Hamilton, ON | 70.91496368299963
+65 | Sample listing description 65 | 959 Cedar Blvd, Hamilton, ON | 70.91496368299963
+88 | Sample listing description 88 | 1236 Maple Rd, Hamilton, ON | 72.29410429695548
+27 | Sample listing description 27 | 8005 Pine Ave, Toronto, ON | 75.10078443802206
+53 | Sample listing description 53 | 8005 Pine Ave, Toronto, ON | 75.10078443802206
+73 | Sample listing description 73 | 5181 Walnut Ave, Toronto, ON | 76.55685522518445
+13 | Sample listing description 13 | 4346 Oak St, Ottawa, ON | 76.58554897573417
+10 | Sample listing description 10 | 6940 Maple Rd, London, ON | 78.44798507925519
+2 | Sample listing description 2 | 6940 Maple Rd, London, ON | 78.44798507925519
+25 | Sample listing description 25 | 6940 Maple Rd, London, ON | 78.44798507925519
+14 | Sample listing description 14 | 6940 Maple Rd, London, ON | 78.44798507925519
+92 | Sample listing description 92 | 6571 Main St, Waterloo, AB | 78.59113266175939
+94 | Sample listing description 94 | 2622 Walnut Ave, London, MB | 78.59733514396527
+78 | Sample listing description 78 | 9356 Cedar Blvd, London, QC | 83.95609835134971
+84 | Sample listing description 84 | 9356 Cedar Blvd, London, QC | 83.95609835134971
+46 | Sample listing description 46 | 9356 Cedar Blvd, London, QC | 83.95609835134971
+74 | Sample listing description 74 | 1585 Pine Ave, Ottawa, MB | 89.34863070506506
+51 | Sample listing description 51 | 7509 Cedar Blvd, Hamilton, ON | 90.11948884906433
+6 | Sample listing description 6 | 4041 Elm St, Hamilton, MB | 90.13128720579188
+42 | Sample listing description 42 | 3658 Oak St, Toronto, MB | 92.19030917457808
+47 | Sample listing description 47 | 3658 Oak St, Toronto, MB | 92.19030917457808
+56 | Sample listing description 56 | 3658 Oak St, Toronto, MB | 92.19030917457808
+(50 rows)
