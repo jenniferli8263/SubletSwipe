@@ -60,7 +60,7 @@ create index if not exists idx_listings_locations_id on listings(locations_id);
 create index if not exists idx_listings_building_type_id on listings(building_type_id);
 
 create table if not exists photos (
-    listing_id bigint not null references listings(id),
+    listing_id bigint not null references listings(id) on delete cascade,
     url text not null,
     label varchar(255),
     primary key (listing_id, url)
