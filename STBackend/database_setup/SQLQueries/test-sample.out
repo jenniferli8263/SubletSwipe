@@ -7,7 +7,7 @@ id
 -- Feature 2 Output --
 id | user_id | is_active | locations_id | start_date | end_date | target_gender | asking_price | building_type_id | num_bedrooms | num_bathrooms | pet_friendly | utilities_incl | description
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-2 | 93 | t | 62 | 2025-08-11 | 2026-01-05 | male | 123321.0 | 3 | 5 | 2 | t | t | Sample listing description 2
+2 | 93 | f | 62 | 2025-08-11 | 2026-01-05 | male | 123321.0 | 3 | 5 | 2 | t | t | Sample listing description 2
 (1 rows)
 
 

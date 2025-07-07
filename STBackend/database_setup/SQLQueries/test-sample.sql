@@ -15,7 +15,7 @@ VALUES (103, 'https://example.com/photo/103_1.jpg', 'living_room'), (103, 'https
 
 -- Feature 2: Update Listing
 UPDATE listings
-SET asking_price = 123321, pet_friendly = TRUE
+SET is_active = FALSE
 WHERE id = 2 AND user_id = 93 RETURNING *;
 
 -- Feature 3; Get all the details related to a listing
