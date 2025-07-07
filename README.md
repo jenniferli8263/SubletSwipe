@@ -4,8 +4,11 @@
 ## Where to find C2 and C3
 The SQL code we used for creating our tables is under the path `STBackend/database_setup/SQLQueries/`. You can also find the SQL queries for our 4 basic features in this directory, along with the corresponding output.
 
-## How to create/load the database
+## How to create/load the sample database
 Our database is hosted on the cloud using Neon, simply follow the steps below to run a local backend server which will automatically connect you to the database.
+
+## How to generate "production" dataset and load into database
+Production dataset is in `STBackend/data/prod.xlsx`, data is to be loaded in Neon database through `STBackend/data/insert_data.ipynb`
 
 ## 💡 Current Features
 - Add a listing
