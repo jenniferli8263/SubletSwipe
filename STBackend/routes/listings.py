@@ -133,3 +133,50 @@ async def get_listing(listing_id: int):
         if not row:
             raise HTTPException(status_code=404, detail="Listing not found")
         return dict(row)
+
+@router.get("/listings/closest/{renter_id}")
+async def get_closest_listings(renter_id: int):
+    query = """
+        WITH renter_location AS (
+            SELECT loc.latitude AS ref_lat, loc.longitude AS ref_lon
+            FROM renter_profiles r
+            JOIN locations loc ON r.locations_id = loc.id
+            WHERE r.id = $1
+        )
+        SELECT 
+            l.id, 
+            l.description, 
+            loc.address_string,
+            6371 * 2 * ASIN(SQRT(
+                POWER(SIN(RADIANS(loc.latitude - rl.ref_lat) / 2), 2) +
+                COS(RADIANS(rl.ref_lat)) * COS(RADIANS(loc.latitude)) *
+                POWER(SIN(RADIANS(loc.longitude - rl.ref_lon) / 2), 2)
+            )) AS distance_km
+        FROM listings l
+        JOIN locations loc ON l.locations_id = loc.id
+        JOIN renter_location rl ON TRUE
+        WHERE l.is_active = TRUE
+        ORDER BY distance_km
+        LIMIT 50
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        rows = await connection.fetch(query, renter_id)
+        return [dict(row) for row in rows]
+
+@router.put("/listings/{listing_id}/deactivate/{user_id}")
+async def deactivate_listing(listing_id: int, user_id: int):
+    query = """
+        UPDATE listings
+        SET is_active = FALSE
+        WHERE id = $1 AND user_id = $2
+        RETURNING *
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        row = await connection.fetchrow(query, listing_id, user_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Listing not found or user not authorized")
+        return dict(row)
