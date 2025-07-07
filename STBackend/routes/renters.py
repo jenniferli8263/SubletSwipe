@@ -10,8 +10,9 @@ async def get_renter_matches(renter_id: int):
         SELECT
             100.0 AS base_score,
             1.01 AS distance_factor_base,
-            1.05 AS price_factor_base,
-            1.1 AS utilities_factor,
+            0.995 AS price_factor_base,
+            1.2 AS bathroom_factor_base,
+            100 AS utilities_adjustment,
             1.2 AS building_type_factor,
             1.5 AS gender_factor
     ),
@@ -22,7 +23,6 @@ async def get_renter_matches(renter_id: int):
         SELECT l.* FROM listings l, renter r
         WHERE l.is_active
           AND (l.num_bedrooms = r.num_bedrooms)
-          AND (l.num_bathrooms = r.num_bathrooms)
           AND (r.start_date >= l.start_date - 5)
           AND (r.end_date <= l.end_date + 5)
           AND (r.has_pet <= l.pet_friendly)
@@ -57,11 +57,13 @@ async def get_renter_matches(renter_id: int):
         JOIN renter_location rl ON TRUE
     )
     SELECT
+        r.budget,
         bl.*,
         (p.base_score *
             POWER(p.distance_factor_base, bl.distance_km) *
-            POWER(p.price_factor_base, (bl.asking_price - r.budget)) *
-            CASE WHEN bl.utilities_incl THEN p.utilities_factor ELSE 1 END *
+            POWER(p.price_factor_base, (
+             (bl.asking_price + CASE WHEN bl.utilities_incl THEN 0 ELSE p.utilities_adjustment END) - r.budget)) *
+            POWER(p.bathroom_factor_base, (bl.num_bathrooms - r.num_bathrooms)) *
             CASE WHEN bl.building_type_id = r.building_type_id THEN p.building_type_factor ELSE 1 END *
             CASE WHEN bl.target_gender IS NULL OR bl.target_gender = r.gender THEN p.gender_factor ELSE 1 END
         ) AS score
