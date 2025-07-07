@@ -18,3 +18,13 @@ app.include_router(auth.router)
 app.include_router(hello.router)
 app.include_router(renters.router)
 app.include_router(users.router)
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or ["http://localhost:8081"] for more security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
