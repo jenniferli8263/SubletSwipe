@@ -56,22 +56,9 @@ LEFT JOIN building_types bt ON l.building_type_id = bt.id
 WHERE l.id = 1
 
 
--- Feature 4: Get the 50 closest active listings ordered by proximity to renter
-WITH renter_location AS (
-  SELECT loc.latitude AS ref_lat, loc.longitude AS ref_lon
-  FROM renter_profiles r
-  JOIN locations loc ON r.location_id = loc.id
-  WHERE r.id = 1
-)
+-- Feature 4: User signup/login
 
-SELECT l.id, l.description, loc.address_string,
-  6371 * 2 * ASIN(SQRT(
-    POWER(SIN(RADIANS(loc.latitude - rl.ref_lat) / 2), 2) +
-    COS(RADIANS(rl.ref_lat)) * COS(RADIANS(loc.latitude)) *
-    POWER(SIN(RADIANS(loc.longitude - rl.ref_lon) / 2), 2)
-  )) AS distance_km
-FROM listings l
-JOIN locations loc ON l.location_id = loc.id
-JOIN renter_location rl ON TRUE
-WHERE l.is_active = true
-ORDER BY distance_km LIMIT 50;
+
+
+-- Feature 5: Delete user
+DELETE from users WHERE id = 100 RETURNING *;
