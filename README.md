@@ -11,11 +11,11 @@ Our database is hosted on the cloud using Neon, simply follow the steps below to
 The full Production dataset is in `STBackend/data/prod.xlsx`. The data is already loaded into our Neon production database; the connection string for this can be found at the end of our report. The python script used to load clean and load the data in `prod.xlsx` can be found at `STBackend/data/insert_data.ipynb`. Running all blocks in the jupyter notebook will clean then re-populate the production database on Neon.
 
 ## 💡 Current Features
-- Add a listing
-- Get details of a listing
-- Deactivate a listing
-- User signup and login
-- Delete a user
+- Add a listing: `STBackend/routes/listings.py`
+- Get details of a listing: `STBackend/routes/listings.py`
+- Deactivate a listing: `STBackend/routes/listings.py`
+- User signup and login: `STBackend/routes/auth.py`
+- Delete a user: `STBackend/routes/users.py`
 
 We have implemented endpoints on the backend for these features. See below on how to run a local server and test the features via the backend.
 The first three features have also been implemented on our frontend.
