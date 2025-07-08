@@ -8,7 +8,7 @@ The SQL code we used for creating our tables is under the path `STBackend/databa
 Our database is hosted on the cloud using Neon, simply follow the steps below to run a local backend server which will automatically connect you to the database.
 
 ## How to generate "production" dataset and load into database
-Production dataset is in `STBackend/data/prod.xlsx`, data is to be loaded in Neon database through `STBackend/data/insert_data.ipynb`
+The full Production dataset is in `STBackend/data/prod.xlsx`. The data is already loaded into our Neon production database; the connection string for this can be found at the end of our report. The python script used to load clean and load the data in `prod.xlsx` can be found at `STBackend/data/insert_data.ipynb`. Running all blocks in the jupyter notebook will clean then re-populate the production database on Neon.
 
 ## 💡 Current Features
 - Add a listing
