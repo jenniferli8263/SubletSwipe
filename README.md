@@ -54,4 +54,14 @@ DATABASE_URL=your_database_url // copy and paste here from the Milestone 1 repor
 ### Example
 <img width="1070" alt="Screenshot 2025-06-17 at 4 43 58 PM" src="https://github.com/user-attachments/assets/c126ccd3-b893-48bf-88e1-e162d280d99d" />
 
-
+## How to run the frontend
+1. Make sure the backend server has been started.
+2. Navigate into the STFrontend directory.
+3. Run the following command to install requirements
+```
+npm install
+```
+4. Start the expo server
+```
+npx expo start --clear
+```
