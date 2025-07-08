@@ -1,0 +1,33 @@
+-- Feature 1 Output --
+id
+--
+1001
+
+-- Feature 2 Output --
+id | user_id | is_active | locations_id | start_date | end_date | target_gender | asking_price | building_type_id | num_bedrooms | num_bathrooms | pet_friendly | utilities_incl | description
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1001 | 1 | f | 3 | 2025-09-01 | 2025-12-31 | female | 3000.00 | 35 | 3 | 3 | t | t | Spacious property, beautifully maintained
+(1 rows)
+
+-- Feature 3 Output -- 
+id | user_id | poster_name | poster_email | is_active | start_date | end_date | target_gender | asking_price | num_bedrooms | num_bathrooms | pet_friendly | utilities_incl | description | address_string | latitude | longitude | building_type | photos | amenities
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+1001 | 1 | Elizabeth Allen | elizabeth.allen901@example.com | f | 2025-09-01 | 2025-12-31 | female | 3000.0 | 3 | 3 | t | t | Spacious property, beautifully maintained | 8 Watermill St, Kitchener, ON N2P 0H5, Canada | 43.3739 | -80.4333 | Townhouse | [{"url" : "https://cdn.realtor.ca/listing/TS638841952853000000/reb82/highres/0/x12183690_4.jpg", "label" : "exterior"}] | ["In-Unit Laundry", "Shared Kitchen", "Central Air Conditioning"]
+(1 rows)
+
+-- Feature 4 Output --
+id
+--
+1001
+(1 rows)
+
+id | first_name | last_name | password | email | profile_photo  
+----------------------------------------------------------------
+1001 | Anika | Sharma | $2b$12$5/EUu | a642shar@uwaterloo.ca | 
+(1 rows)
+
+-- Feature 5 Output --
+id | first_name | last_name | password | email | profile_photo  
+-----------------------------------------------------------------  
+1001 | Anika | Sharma | $2b$12$5/EUu | a642shar@uwaterloo.ca |   
+(1 rows)
