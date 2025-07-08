@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { apiPost } from "@/lib/api";
+import { Picker } from "@react-native-picker/picker";
+import { apiGet, apiPost } from "@/lib/api";
 
-// Explicitly type Input and Button as React.ComponentType<any>
 let Input: React.ComponentType<any>,
   Button: React.ComponentType<any>,
   Select: React.ComponentType<any>,
@@ -66,13 +66,26 @@ try {
         backgroundColor: "#fafafa",
       }}
     >
-      <Text style={{ padding: 12, color: "#888" }}>{props.placeholder}</Text>
-      <TextInput
-        value={props.value}
-        onChangeText={props.onValueChange}
-        placeholder={props.placeholder}
-        style={{ padding: 12 }}
-      />
+      <Picker
+        selectedValue={props.value}
+        onValueChange={props.onValueChange}
+        style={{
+          padding: 12,
+          backgroundColor: "transparent",
+          color: "#222",
+          borderWidth: 0,
+        }}
+      >
+        <Picker.Item label={props.placeholder || "Select..."} value="" />
+        {props.options &&
+          props.options.map((option: any) => (
+            <Picker.Item
+              key={option.value}
+              label={option.label}
+              value={option.value}
+            />
+          ))}
+      </Picker>
     </View>
   );
   Checkbox = (props: any) => (
@@ -102,31 +115,6 @@ try {
   );
 }
 
-const genderOptions = [
-  { label: "Male", value: "male" },
-  { label: "Female", value: "female" },
-  { label: "Non-binary", value: "non-binary" },
-  { label: "Prefer not to say", value: "prefer not to say" },
-  { label: "Other", value: "other" },
-];
-const buildingTypes = [
-  { label: "Apartment", value: 1 },
-  { label: "House", value: 2 },
-  { label: "Condo", value: 3 },
-];
-const amenitiesList = [
-  { label: "WiFi", value: 1 },
-  { label: "AC", value: 2 },
-  { label: "Laundry", value: 3 },
-  { label: "Parking", value: 4 },
-  { label: "Gym", value: 5 },
-];
-const photoOptions = [
-  { label: "Hallway.jpg", value: "hallway.jpg" },
-  { label: "Kitchen.jpg", value: "kitchen.jpg" },
-  { label: "Bedroom.jpg", value: "bedroom.jpg" },
-];
-
 export default function AddListingScreen() {
   const [form, setForm] = useState({
     user_id: "",
@@ -147,6 +135,55 @@ export default function AddListingScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [amenities, setAmenities] = useState<
+    Array<{ value: number; label: string }>
+  >([]);
+  const [buildingTypes, setBuildingTypes] = useState<
+    Array<{ value: number; label: string }>
+  >([]);
+  const [genderOptions, setGenderOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+
+  const loadAmenitiesOptions = async () => {
+    const data = await apiGet("/amenities");
+    setAmenities(
+      data.map((item: any) => ({
+        value: item.id,
+        label: item.name,
+      }))
+    );
+  };
+
+  const loadBuildingTypesOptions = async () => {
+    const data = await apiGet("/building-types");
+    setBuildingTypes(
+      data.map((item: any) => ({
+        value: item.id,
+        label: item.type,
+      }))
+    );
+  };
+
+  const loadGenderOptions = async () => {
+    const data = await apiGet("/genders");
+    console.log(data);
+    setGenderOptions(
+      data.map((item: any) => ({
+        value: item.gender,
+        label: item.gender,
+      }))
+    );
+  };
+
+  useEffect(() => {
+    Promise.all([
+      loadAmenitiesOptions(),
+      loadBuildingTypesOptions(),
+      loadGenderOptions(),
+    ]);
+  }, []);
 
   const handleChange = (key: string, value: any) => {
     setForm({ ...form, [key]: value });
@@ -201,6 +238,11 @@ export default function AddListingScreen() {
     }
   };
 
+  const handleAddPhoto = () => {
+    // TODO: Implement photo picker/upload logic
+    alert("Add Photo button pressed!");
+  };
+
   return (
     <ScrollView className="flex-1 bg-gray-50 p-8">
       <View className="bg-white rounded-2xl shadow p-6">
@@ -231,7 +273,7 @@ export default function AddListingScreen() {
         <View className="flex-row items-center mb-4">
           <Checkbox
             value={form.utilities_incl}
-            onValueChange={(v) => handleChange("utilities_incl", v)}
+            onValueChange={(v: boolean) => handleChange("utilities_incl", v)}
             label="Utilities Included"
           />
         </View>
@@ -268,20 +310,16 @@ export default function AddListingScreen() {
           options={buildingTypes}
         />
         <View className="h-px bg-gray-200 my-4" />
-        {/* Amenities */}
         <Text className="mb-1">Amenities</Text>
         <Select
           placeholder="Add an amenity"
           value={""}
           onValueChange={(v: string) => handleToggleAmenity(Number(v))}
-          options={amenitiesList.filter(
-            (a) => !form.amenities.includes(a.value)
-          )}
+          options={amenities.filter((a) => !form.amenities.includes(a.value))}
         />
         <View className="flex-row flex-wrap mb-4">
           {form.amenities.map((id) => {
-            const label =
-              amenitiesList.find((a) => a.value === id)?.label || id;
+            const label = amenities.find((a) => a.value === id)?.label || id;
             return (
               <TouchableOpacity
                 key={id}
@@ -303,7 +341,7 @@ export default function AddListingScreen() {
         <View className="flex-row items-center mb-4">
           <Checkbox
             value={form.pet_friendly}
-            onValueChange={(v) => handleChange("pet_friendly", v)}
+            onValueChange={(v: boolean) => handleChange("pet_friendly", v)}
             label="Pet Friendly"
           />
         </View>
@@ -317,12 +355,9 @@ export default function AddListingScreen() {
           numberOfLines={3}
         />
         <Text className="mb-1">Photos</Text>
-        <Select
-          placeholder="Add a photo"
-          value={""}
-          onValueChange={(v: string) => handleTogglePhoto(v)}
-          options={photoOptions.filter((p) => !form.photos.includes(p.value))}
-        />
+        <Button onPress={handleAddPhoto} className="mb-2">
+          Add Photo
+        </Button>
         <View className="flex-row flex-wrap mb-4">
           {form.photos.map((name) => (
             <TouchableOpacity
