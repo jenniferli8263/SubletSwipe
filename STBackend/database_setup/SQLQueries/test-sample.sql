@@ -58,7 +58,18 @@ WHERE l.id = 1
 
 -- Feature 4: User signup/login
 
+-- user signup
+INSERT INTO users (email, first_name, last_name, password, profile_photo) 
+VALUES (
+    cs348@uwaterloo.ca, 
+    'John',
+    'Doe',
+    '$2b$12$5/EUII7bOvnUE2zpZxqQVe6Fr3qvj9quPjDJ9OPxcSclblmrgOnpO',
+    'https://linktopfp.com')
+    RETURNING id;
 
+-- user login - searches users table for user with matching email (if any)
+SELECT id, email, password, first_name, last_name, profile_photo FROM users WHERE email = 'cs348@uwaterloo.ca';
 
 -- Feature 5: Delete user
 DELETE from users WHERE id = 100 RETURNING *;

@@ -19,8 +19,15 @@ id | user_id | poster_name | poster_email | is_active | start_date | end_date | 
 
 
 -- Feature 4 Output --
+id
+--
+104
+(1 rows)
 
-
+id | first_name | last_name | password | email | profile_photo  
+----------------------------------------------------------------------------------------------------------------------------
+104 | John | Doe | $2b$12$uAyYC9gU/etbk.5m/6huaOG0tUVbsOrU8FFbozOH42UCLwbTTTzNy | cs348@uwaterloo.ca | https://linktopfp.com  
+(1 rows)
 
 -- Feature 5 Output --
 id | first_name | last_name | password | email | profile_photo  
