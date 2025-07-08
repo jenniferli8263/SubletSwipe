@@ -10,7 +10,7 @@ end_months = [4, 8, 12]    # April, August, December
 
 def generate_start_date():
     # Start from next month just to ensure future
-    year = random.randint(today.year, today.year + 5)
+    year = today.year+1
     month = random.choice(start_months)
     day = random.randint(1, 28)
     candidate = datetime(year, month, day)
@@ -18,15 +18,14 @@ def generate_start_date():
 
 def generate_end_date(start_date):
     candidates = []
-    for y in range(start_date.year, start_date.year + 3):
-        for m in end_months:
-            day = random.randint(1, 28)
-            try:
-                candidate = datetime(y, m, day)
-                if candidate > start_date:
-                    candidates.append(candidate)
-            except ValueError:
-                continue
+    for m in end_months:
+        day = random.randint(1, 28)
+        try:
+            candidate = datetime(today.year+1, m, day)
+            if candidate > start_date:
+                candidates.append(candidate)
+        except ValueError:
+            continue
     return random.choice(candidates)
 
 rows = []
