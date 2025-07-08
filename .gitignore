@@ -65,3 +65,4 @@ STFrontend/.env*.local
 STFrontend/*.tsbuildinfo
 
 STFrontend/app-example
+STBackend/__pycache__/*

@@ -17,7 +17,8 @@ class Photo(BaseModel):
 class ListingCreate(BaseModel):
     user_id: int
     is_active: Optional[bool] = True
-    locations_id: int
+    raw_address: str # raw address to be verified
+    locations_id: Optional[int] = None # will be set by the backend after we add a row
     start_date: date
     end_date: date
     target_gender: GenderEnum
