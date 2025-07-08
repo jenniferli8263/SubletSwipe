@@ -1,8 +1,58 @@
 from fastapi import APIRouter, HTTPException, status
 from models import Photo, ListingCreate
 from db import get_pool
+import httpx
+import os
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 router = APIRouter()
+
+async def resolve_address_from_google(address: str):
+    url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={GOOGLE_API_KEY}"
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
+        data = resp.json()
+        if data["status"] != "OK":
+            raise ValueError("Google API failed: " + data["status"])
+
+        result = data["results"][0]
+        return {
+            "places_api_id": result["place_id"],
+            "address_string": result["formatted_address"],
+            "latitude": result["geometry"]["location"]["lat"],
+            "longitude": result["geometry"]["location"]["lng"]
+        }
+
+async def insert_location_if_not_exists(connection, place_data: dict) -> int:
+    query_check = "SELECT id FROM locations WHERE places_api_id = CAST($1 AS TEXT)"
+    existing = await connection.fetchrow(query_check, place_data["places_api_id"])
+    if existing:
+        print(f"[INFO] Existing location found: id={existing['id']}")
+        return existing["id"]
+
+    query_insert = """
+        INSERT INTO locations (places_api_id, address_string, latitude, longitude)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+    """
+    try:
+        print(f"[INFO] Inserting location: {place_data}")
+        row = await connection.fetchrow(
+            query_insert,
+            place_data["places_api_id"],
+            place_data["address_string"],
+            place_data["latitude"],
+            place_data["longitude"]
+        )
+        if row is None:
+            raise RuntimeError("Location insert failed: fetchrow returned None")
+        print(f"[INFO] Inserted new location with id={row['id']}")
+        return row["id"]
+    except Exception as e:
+        print(f"[ERROR] insert_location_if_not_exists failed: {e}")
+        raise RuntimeError(f"Failed to insert location: {str(e)}")
+    
 
 async def insert_listing_amenities(connection, listing_id: int, amenities: list[int]):
     if not amenities:
@@ -81,10 +131,29 @@ async def insert_listing(listing: ListingCreate) -> int:
 @router.post("/listings", status_code=status.HTTP_201_CREATED)
 async def create_listing(listing: ListingCreate):
     try:
-        new_id = await insert_listing(listing)
+        if not listing.raw_address:
+            raise HTTPException(status_code=400, detail="Missing address")
+
+        place_data = await resolve_address_from_google(listing.raw_address)
+        print("[DEBUG] place_data:", place_data)
+
+        pool = await get_pool()
+        async with pool.acquire() as connection:
+            location_id = await insert_location_if_not_exists(connection, place_data)
+            print(f"[DEBUG] location_id inserted or found: {location_id}")
+
+            async with connection.transaction():
+                listing.locations_id = location_id
+                new_id = await insert_listing(listing)
+
         return {"message": "Listing created", "id": new_id}
+
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Database error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error creating listing: {str(e)}"
+        )
+
 
 @router.get("/listings/{listing_id}")
 async def get_listing(listing_id: int):
