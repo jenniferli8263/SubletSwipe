@@ -117,7 +117,7 @@ try {
 
 export default function AddListingScreen() {
   const [form, setForm] = useState({
-    user_id: "",
+    user_id: 1,
     locations_id: "",
     start_date: "",
     end_date: "",
@@ -131,7 +131,7 @@ export default function AddListingScreen() {
     building_type_id: "",
     amenities: [] as number[],
     photos: [] as string[],
-    address: "",
+    raw_address: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -282,8 +282,8 @@ export default function AddListingScreen() {
         <Text className="mb-1">Address</Text>
         <Input
           placeholder="Search"
-          value={form.address}
-          onChangeText={(v: string) => handleChange("address", v)}
+          value={form.raw_address}
+          onChangeText={(v: string) => handleChange("raw_address", v)}
           className="mb-4"
         />
         <Text className="mb-1">Bedrooms</Text>
