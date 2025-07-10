@@ -27,6 +27,7 @@ export default function AddListingScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const [amenities, setAmenities] = useState<
     Array<{ value: number; label: string }>
@@ -60,7 +61,6 @@ export default function AddListingScreen() {
 
   const loadGenderOptions = async () => {
     const data = await apiGet("/genders");
-    console.log(data);
     setGenderOptions(
       data.map((item: any) => ({
         value: item.gender,
@@ -101,6 +101,55 @@ export default function AddListingScreen() {
   const handleSubmit = async () => {
     setLoading(true);
     setMessage("");
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.raw_address) newErrors.raw_address = "Address is required.";
+    if (!form.start_date) newErrors.start_date = "Start date is required.";
+    if (!form.end_date) newErrors.end_date = "End date is required.";
+    if (!form.asking_price)
+      newErrors.asking_price = "Monthly rent is required.";
+    if (!form.num_bedrooms)
+      newErrors.num_bedrooms = "Number of bedrooms is required.";
+    if (!form.num_bathrooms)
+      newErrors.num_bathrooms = "Number of bathrooms is required.";
+    if (!form.building_type_id)
+      newErrors.building_type_id = "Building type is required.";
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (form.start_date && !dateRegex.test(form.start_date)) {
+      newErrors.start_date = "Invalid date format (YYYY-MM-DD)";
+    }
+    if (form.end_date && !dateRegex.test(form.end_date)) {
+      newErrors.end_date = "Invalid date format (YYYY-MM-DD)";
+    }
+
+    if (
+      form.asking_price &&
+      (!/^[0-9]+(\.[0-9]+)?$/.test(form.asking_price) ||
+        Number(form.asking_price) <= 0)
+    ) {
+      newErrors.asking_price = "Rent must be a number";
+    }
+    if (
+      form.num_bedrooms &&
+      (!/^[0-9]+$/.test(form.num_bedrooms) || Number(form.num_bedrooms) <= 0)
+    ) {
+      newErrors.num_bedrooms = "Number of bedrooms must be a number";
+    }
+    if (
+      form.num_bathrooms &&
+      (!/^[0-9]+$/.test(form.num_bathrooms) || Number(form.num_bathrooms) <= 0)
+    ) {
+      newErrors.num_bathrooms = "Number of bathrooms must be number";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+    setErrors({});
+
     try {
       const payload = {
         ...form,
@@ -120,7 +169,6 @@ export default function AddListingScreen() {
         utilities_incl: Boolean(form.utilities_incl),
         description: form.description,
       };
-      console.log(payload);
       await apiPost("/listings", payload);
       setMessage("Listing created!");
     } catch (e: any) {
@@ -140,28 +188,43 @@ export default function AddListingScreen() {
       <View className="bg-white">
         <Text className="text-4xl font-bold mb-6">Add a Listing</Text>
         {/* Dates */}
-        <Text className="mb-1">Start Date</Text>
-        <Input
-          placeholder="YYYY-MM-DD"
-          value={form.start_date}
-          onChangeText={(v: string) => handleChange("start_date", v)}
-          className="mb-4"
-        />
-        <Text className="mb-1">End Date</Text>
-        <Input
-          placeholder="YYYY-MM-DD"
-          value={form.end_date}
-          onChangeText={(v: string) => handleChange("end_date", v)}
-          className="mb-4"
-        />
-        <Text className="mb-1">Monthly Rent</Text>
-        <Input
-          placeholder="$"
-          value={form.asking_price}
-          onChangeText={(v: string) => handleChange("asking_price", v)}
-          className="mb-4"
-          keyboardType="numeric"
-        />
+        <View className="py-2">
+          <Text className="mb-1">Start Date</Text>
+          <Input
+            placeholder="YYYY-MM-DD"
+            value={form.start_date}
+            onChangeText={(v: string) => handleChange("start_date", v)}
+            className="mb-4"
+          />
+          {errors.start_date && (
+            <Text className="text-red-600 mb-2">{errors.start_date}</Text>
+          )}
+        </View>
+        <View className="py-2">
+          <Text className="mb-1">End Date</Text>
+          <Input
+            placeholder="YYYY-MM-DD"
+            value={form.end_date}
+            onChangeText={(v: string) => handleChange("end_date", v)}
+            className="mb-4"
+          />
+          {errors.end_date && (
+            <Text className="text-red-600 mb-2">{errors.end_date}</Text>
+          )}
+        </View>
+        <View className="py-2">
+          <Text className="mb-1">Monthly Rent</Text>
+          <Input
+            placeholder="$"
+            value={form.asking_price}
+            onChangeText={(v: string) => handleChange("asking_price", v)}
+            className="mb-4"
+            keyboardType="numeric"
+          />
+          {errors.asking_price && (
+            <Text className="text-red-600 mb-2">{errors.asking_price}</Text>
+          )}
+        </View>
         <View className="flex-row items-center mb-4">
           <Checkbox
             value={form.utilities_incl}
@@ -171,34 +234,54 @@ export default function AddListingScreen() {
         </View>
         <View className="h-px bg-gray-200 my-4" />
         {/* Address */}
-        <Text className="mb-1">Address</Text>
-        <AddressAutocomplete
-          value={form.raw_address}
-          onSubmitCallback={(desc) => handleChange("raw_address", desc)}
-        />
-        <Text className="mb-1">Bedrooms</Text>
-        <Input
-          placeholder="#"
-          value={form.num_bedrooms}
-          onChangeText={(v: string) => handleChange("num_bedrooms", v)}
-          className="mb-4"
-          keyboardType="numeric"
-        />
-        <Text className="mb-1">Bathrooms</Text>
-        <Input
-          placeholder="#"
-          value={form.num_bathrooms}
-          onChangeText={(v: string) => handleChange("num_bathrooms", v)}
-          className="mb-4"
-          keyboardType="numeric"
-        />
-        <Text className="mb-1">Building Type</Text>
-        <Select
-          placeholder="Select"
-          value={form.building_type_id}
-          onValueChange={(v) => handleChange("building_type_id", String(v))}
-          options={buildingTypes}
-        />
+        <View className="py-2">
+          <Text className="mb-1">Address</Text>
+          <AddressAutocomplete
+            value={form.raw_address}
+            onSubmitCallback={(desc) => handleChange("raw_address", desc)}
+          />
+          {errors.raw_address && (
+            <Text className="text-red-600 mb-2">{errors.raw_address}</Text>
+          )}
+        </View>
+        <View className="py-2">
+          <Text className="mb-1">Bedrooms</Text>
+          <Input
+            placeholder="#"
+            value={form.num_bedrooms}
+            onChangeText={(v: string) => handleChange("num_bedrooms", v)}
+            className="mb-4"
+            keyboardType="numeric"
+          />
+          {errors.num_bedrooms && (
+            <Text className="text-red-600 mb-2">{errors.num_bedrooms}</Text>
+          )}
+        </View>
+        <View className="py-2">
+          <Text className="mb-1">Bathrooms</Text>
+          <Input
+            placeholder="#"
+            value={form.num_bathrooms}
+            onChangeText={(v: string) => handleChange("num_bathrooms", v)}
+            className="mb-4"
+            keyboardType="numeric"
+          />
+          {errors.num_bathrooms && (
+            <Text className="text-red-600 mb-2">{errors.num_bathrooms}</Text>
+          )}
+        </View>
+        <View className="py-2">
+          <Text className="mb-1">Building Type</Text>
+          <Select
+            placeholder="Select"
+            value={form.building_type_id}
+            onValueChange={(v) => handleChange("building_type_id", String(v))}
+            options={buildingTypes}
+          />
+          {errors.building_type_id && (
+            <Text className="text-red-600 mb-2">{errors.building_type_id}</Text>
+          )}
+        </View>
         <View className="h-px bg-gray-200 my-4" />
         <Text className="mb-1">Amenities</Text>
         <Select
@@ -228,22 +311,23 @@ export default function AddListingScreen() {
           onValueChange={(v) => handleChange("target_gender", String(v))}
           options={genderOptions}
         />
-        <View className="flex-row items-center mb-4">
+        <View className="flex-row items-center mb-4 mt-4">
           <Checkbox
             value={form.pet_friendly}
             onValueChange={(v: boolean) => handleChange("pet_friendly", v)}
             label="Pet Friendly"
           />
         </View>
-        <Text className="mb-1">Description</Text>
-        <Input
-          placeholder="Text"
-          value={form.description}
-          onChangeText={(v: string) => handleChange("description", v)}
-          className="mb-4"
-          multiline
-          numberOfLines={3}
-        />
+        <View className="py-2">
+          <Text className="mb-1">Description</Text>
+          <Input
+            placeholder="Text"
+            value={form.description}
+            onChangeText={(v: string) => handleChange("description", v)}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
         <Text className="mb-1">Photos</Text>
         <Button onPress={handleAddPhoto} className="mb-2">
           Add Photo

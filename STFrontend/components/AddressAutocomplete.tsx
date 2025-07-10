@@ -38,7 +38,6 @@ export function AddressAutocomplete({
     if (!submitted) return;
 
     setLoading(true);
-    console.log("searching");
     apiGet(`/locations/${encodeURIComponent(input)}`)
       .then((data) => {
         setPredictions(data.predictions || []);
@@ -77,7 +76,6 @@ export function AddressAutocomplete({
         }}
         selection={selection}
         className=""
-        keyboardType="numeric"
       />
       {loading && <ActivityIndicator size="small" className="mt-2" />}
       {showDropdown && !loading && predictions.length === 0 && (
