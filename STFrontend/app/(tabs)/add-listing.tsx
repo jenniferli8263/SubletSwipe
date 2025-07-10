@@ -1,124 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { apiGet, apiPost } from "@/lib/api";
-
-let Input: React.ComponentType<any>,
-  Button: React.ComponentType<any>,
-  Select: React.ComponentType<any>,
-  Checkbox: React.ComponentType<any>;
-try {
-  Input = require("@/components/ui/input").Input;
-  Button = require("@/components/ui/button").Button;
-  Select = require("@/components/ui/select").Select;
-  Checkbox = require("@/components/ui/checkbox").Checkbox;
-} catch {
-  Input = (props: any) => (
-    <TextInput
-      {...props}
-      style={[
-        {
-          borderWidth: 1,
-          borderColor: "#ccc",
-          padding: 12,
-          borderRadius: 8,
-          marginBottom: 12,
-          backgroundColor: "#fafafa",
-        },
-        props.style,
-      ]}
-      placeholderTextColor="#888"
-    />
-  );
-  Button = (props: any) => (
-    <TouchableOpacity
-      onPress={props.onPress}
-      disabled={props.disabled}
-      style={[
-        {
-          backgroundColor: props.disabled ? "#ccc" : "#15803d",
-          padding: 16,
-          borderRadius: 8,
-          alignItems: "center",
-          marginBottom: 8,
-        },
-        props.style,
-      ]}
-    >
-      <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>
-        {props.children}
-      </Text>
-    </TouchableOpacity>
-  );
-  Select = (props: any) => (
-    <View
-      style={{
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        marginBottom: 12,
-        backgroundColor: "#fafafa",
-      }}
-    >
-      <Picker
-        selectedValue={props.value}
-        onValueChange={props.onValueChange}
-        style={{
-          padding: 12,
-          backgroundColor: "transparent",
-          color: "#222",
-          borderWidth: 0,
-        }}
-      >
-        <Picker.Item label={props.placeholder || "Select..."} value="" />
-        {props.options &&
-          props.options.map((option: any) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-      </Picker>
-    </View>
-  );
-  Checkbox = (props: any) => (
-    <TouchableOpacity
-      onPress={() => props.onValueChange(!props.value)}
-      style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
-    >
-      <View
-        style={{
-          width: 20,
-          height: 20,
-          borderWidth: 2,
-          borderColor: "#15803d",
-          borderRadius: 4,
-          backgroundColor: props.value ? "#15803d" : "#fff",
-          marginRight: 8,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        {props.value ? (
-          <Text style={{ color: "#fff", fontWeight: "bold" }}>✓</Text>
-        ) : null}
-      </View>
-      <Text>{props.label}</Text>
-    </TouchableOpacity>
-  );
-}
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
+import Checkbox from "@/components/ui/Checkbox";
+import { AddressAutocomplete } from "../../components/AddressAutocomplete";
 
 export default function AddListingScreen() {
   const [form, setForm] = useState({
     user_id: 1,
-    locations_id: "",
     start_date: "",
     end_date: "",
     target_gender: "",
@@ -213,7 +105,6 @@ export default function AddListingScreen() {
       const payload = {
         ...form,
         user_id: Number(form.user_id),
-        locations_id: Number(form.locations_id),
         asking_price: Number(form.asking_price),
         num_bedrooms: Number(form.num_bedrooms),
         num_bathrooms: Number(form.num_bathrooms),
@@ -229,6 +120,7 @@ export default function AddListingScreen() {
         utilities_incl: Boolean(form.utilities_incl),
         description: form.description,
       };
+      console.log(payload);
       await apiPost("/listings", payload);
       setMessage("Listing created!");
     } catch (e: any) {
@@ -244,8 +136,8 @@ export default function AddListingScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 p-8">
-      <View className="bg-white rounded-2xl shadow p-6">
+    <ScrollView className="flex-1 bg-white p-8">
+      <View className="bg-white">
         <Text className="text-4xl font-bold mb-6">Add a Listing</Text>
         {/* Dates */}
         <Text className="mb-1">Start Date</Text>
@@ -280,11 +172,9 @@ export default function AddListingScreen() {
         <View className="h-px bg-gray-200 my-4" />
         {/* Address */}
         <Text className="mb-1">Address</Text>
-        <Input
-          placeholder="Search"
+        <AddressAutocomplete
           value={form.raw_address}
-          onChangeText={(v: string) => handleChange("raw_address", v)}
-          className="mb-4"
+          onSubmitCallback={(desc) => handleChange("raw_address", desc)}
         />
         <Text className="mb-1">Bedrooms</Text>
         <Input
@@ -306,7 +196,7 @@ export default function AddListingScreen() {
         <Select
           placeholder="Select"
           value={form.building_type_id}
-          onValueChange={(v: string) => handleChange("building_type_id", v)}
+          onValueChange={(v) => handleChange("building_type_id", String(v))}
           options={buildingTypes}
         />
         <View className="h-px bg-gray-200 my-4" />
@@ -314,7 +204,7 @@ export default function AddListingScreen() {
         <Select
           placeholder="Add an amenity"
           value={""}
-          onValueChange={(v: string) => handleToggleAmenity(Number(v))}
+          onValueChange={(v) => handleToggleAmenity(Number(v))}
           options={amenities.filter((a) => !form.amenities.includes(a.value))}
         />
         <View className="flex-row flex-wrap mb-4">
@@ -335,7 +225,7 @@ export default function AddListingScreen() {
         <Select
           placeholder="No preference"
           value={form.target_gender}
-          onValueChange={(v: string) => handleChange("target_gender", v)}
+          onValueChange={(v) => handleChange("target_gender", String(v))}
           options={genderOptions}
         />
         <View className="flex-row items-center mb-4">
@@ -369,11 +259,7 @@ export default function AddListingScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        <Button
-          onPress={handleSubmit}
-          disabled={loading}
-          className="mt-2 w-full rounded-full h-12 justify-center items-center text-lg"
-        >
+        <Button onPress={handleSubmit} disabled={loading}>
           {loading ? "Submitting..." : "Create Listing"}
         </Button>
         {!!message && (
