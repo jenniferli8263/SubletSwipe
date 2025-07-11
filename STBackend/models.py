@@ -46,6 +46,35 @@ class ListingUpdate(BaseModel):
     photos_to_add: Optional[List[Photo]] = None
     photos_to_delete: Optional[List[str]] = None
 
+class RenterProfileCreate(BaseModel):
+     user_id: int
+     is_active: bool
+     raw_address: str
+     locations_id: Optional[int] = None
+     start_date: date
+     end_date: date
+     age: int
+     gender: GenderEnum
+     budget: float
+     building_type_id: Optional[int]
+     num_bedrooms: int
+     num_bathrooms: int
+     has_pet: bool
+     bio: Optional[str]
+
+class RenterProfileUpdate(BaseModel):
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    raw_address: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[GenderEnum] = None
+    budget: Optional[float] = None
+    building_type_id: Optional[int] = None
+    num_bedrooms: Optional[int] = None
+    num_bathrooms: Optional[int] = None
+    has_pet: Optional[bool] = None
+    bio: Optional[str] = None
+
 class UserCreate(BaseModel):
     id: int
     first_name: str
