@@ -6,6 +6,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Checkbox from "@/components/ui/Checkbox";
+import MultiSelect from "@/components/ui/MultiSelect";
 import { AddressAutocomplete } from "../../components/AddressAutocomplete";
 
 export default function AddListingScreen() {
@@ -184,7 +185,10 @@ export default function AddListingScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white p-8">
+    <ScrollView
+      className="flex-1 bg-white p-8"
+      keyboardShouldPersistTaps="handled"
+    >
       <View className="bg-white">
         <Text className="text-4xl font-bold mb-6">Add a Listing</Text>
         {/* Dates */}
@@ -270,12 +274,12 @@ export default function AddListingScreen() {
             <Text className="text-red-600 mb-2">{errors.num_bathrooms}</Text>
           )}
         </View>
-        <View className="py-2">
+        <View className="py-2 z-[30]">
           <Text className="mb-1">Building Type</Text>
           <Select
             placeholder="Select"
             value={form.building_type_id}
-            onValueChange={(v) => handleChange("building_type_id", String(v))}
+            onValueChange={(v) => handleChange("building_type_id", v)}
             options={buildingTypes}
           />
           {errors.building_type_id && (
@@ -284,12 +288,14 @@ export default function AddListingScreen() {
         </View>
         <View className="h-px bg-gray-200 my-4" />
         <Text className="mb-1">Amenities</Text>
-        <Select
-          placeholder="Add an amenity"
-          value={""}
-          onValueChange={(v) => handleToggleAmenity(Number(v))}
-          options={amenities.filter((a) => !form.amenities.includes(a.value))}
-        />
+        <View className="z-[20]">
+          <MultiSelect
+            placeholder="Add an amenity"
+            value={form.amenities}
+            onValueChange={(arr) => handleChange("amenities", arr)}
+            options={amenities}
+          />
+        </View>
         <View className="flex-row flex-wrap mb-4">
           {form.amenities.map((id) => {
             const label = amenities.find((a) => a.value === id)?.label || id;
@@ -305,12 +311,15 @@ export default function AddListingScreen() {
           })}
         </View>
         <Text className="mb-1">Target Gender</Text>
-        <Select
-          placeholder="No preference"
-          value={form.target_gender}
-          onValueChange={(v) => handleChange("target_gender", String(v))}
-          options={genderOptions}
-        />
+        <View className="z-[10]">
+          <Select
+            placeholder="No preference"
+            value={form.target_gender}
+            onValueChange={(v) => handleChange("target_gender", String(v))}
+            options={genderOptions}
+            searchable={false}
+          />
+        </View>
         <View className="flex-row items-center mb-4 mt-4">
           <Checkbox
             value={form.pet_friendly}
