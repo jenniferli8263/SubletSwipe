@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +11,7 @@ import {
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiPost } from "@/lib/api";
+import Input from "@/components/ui/Input";
 
 interface SignupData {
   id: number;
@@ -31,24 +30,26 @@ export default function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleSignup = async () => {
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields");
+    const newErrors: { [key: string]: string } = {};
+    if (!firstName) newErrors.firstName = "First name is required";
+    if (!lastName) newErrors.lastName = "Last name is required";
+    if (!email) newErrors.email = "Email is required";
+    if (!password) newErrors.password = "Password is required";
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
+    if (password && confirmPassword && password !== confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
+    if (password && password.length < 8)
+      newErrors.password = "Password must be at least 8 characters long";
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
-      return;
-    }
-
-    if (password.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters long");
-      return;
-    }
-
     setIsLoading(true);
+    setErrors({});
     try {
       const signupData: SignupData = {
         id: 0, // This will be set by the backend
@@ -57,14 +58,11 @@ export default function SignupScreen() {
         last_name: lastName,
         password,
       };
-
       await apiPost("/signup", signupData);
-
       // After successful signup, automatically log in
       const loginData = { email, password };
       const user = await apiPost("/login", loginData);
       await signIn(user);
-
       router.push("/auth/questionnaire");
     } catch (error) {
       let errorMessage = "An error occurred";
@@ -84,7 +82,8 @@ export default function SignupScreen() {
           errorMessage = error.message;
         }
       }
-      Alert.alert("Signup Failed", errorMessage);
+      // Show error at the top (global error)
+      setErrors((prev) => ({ ...prev, global: errorMessage }));
     } finally {
       setIsLoading(false);
     }
@@ -109,11 +108,14 @@ export default function SignupScreen() {
             {/* Header */}
             <View className="mb-8">
               <TouchableOpacity onPress={goBack} className="mb-4">
-                <Text className="text-green-700 text-lg">← Back</Text>
+                <Text className="text-green-800 text-lg">← Back</Text>
               </TouchableOpacity>
               <Text className="text-3xl font-bold text-gray-900 mb-2">
                 Create Account
               </Text>
+              {errors.global ? (
+                <Text className="text-red-600 mb-2">{errors.global}</Text>
+              ) : null}
               <Text className="text-gray-600 text-lg">
                 Join SubletTinder today!
               </Text>
@@ -127,75 +129,108 @@ export default function SignupScreen() {
                   <Text className="text-gray-700 font-medium mb-2">
                     First Name
                   </Text>
-                  <TextInput
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
+                  <Input
+                    className="mb-4"
                     placeholder="First name"
-                    placeholderTextColor="#9CA3AF"
                     value={firstName}
-                    onChangeText={setFirstName}
+                    onChangeText={(text) => {
+                      setFirstName(text);
+                      if (errors.firstName)
+                        setErrors((e) => ({ ...e, firstName: "" }));
+                    }}
                     autoCapitalize="words"
                   />
+                  {errors.firstName ? (
+                    <Text className="text-red-600 mb-2">
+                      {errors.firstName}
+                    </Text>
+                  ) : null}
                 </View>
                 <View className="flex-1 ml-2">
                   <Text className="text-gray-700 font-medium mb-2">
                     Last Name
                   </Text>
-                  <TextInput
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
+                  <Input
+                    className="mb-4"
                     placeholder="Last name"
-                    placeholderTextColor="#9CA3AF"
                     value={lastName}
-                    onChangeText={setLastName}
+                    onChangeText={(text) => {
+                      setLastName(text);
+                      if (errors.lastName)
+                        setErrors((e) => ({ ...e, lastName: "" }));
+                    }}
                     autoCapitalize="words"
                   />
+                  {errors.lastName ? (
+                    <Text className="text-red-600 mb-2">{errors.lastName}</Text>
+                  ) : null}
                 </View>
               </View>
 
               <View className="mb-4">
                 <Text className="text-gray-700 font-medium mb-2">Email</Text>
-                <TextInput
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
+                <Input
+                  className="mb-4"
                   placeholder="Enter your email"
-                  placeholderTextColor="#9CA3AF"
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (errors.email) setErrors((e) => ({ ...e, email: "" }));
+                  }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
+                {errors.email ? (
+                  <Text className="text-red-600 mb-2">{errors.email}</Text>
+                ) : null}
               </View>
 
               <View className="mb-4">
                 <Text className="text-gray-700 font-medium mb-2">Password</Text>
-                <TextInput
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
+                <Input
+                  className="mb-4"
                   placeholder="Create a password"
-                  placeholderTextColor="#9CA3AF"
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (errors.password)
+                      setErrors((e) => ({ ...e, password: "" }));
+                  }}
                   secureTextEntry
                   autoCapitalize="none"
                 />
+                {errors.password ? (
+                  <Text className="text-red-600 mb-2">{errors.password}</Text>
+                ) : null}
               </View>
 
               <View className="mb-6">
                 <Text className="text-gray-700 font-medium mb-2">
                   Confirm Password
                 </Text>
-                <TextInput
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
+                <Input
+                  className="mb-4"
                   placeholder="Confirm your password"
-                  placeholderTextColor="#9CA3AF"
                   value={confirmPassword}
-                  onChangeText={setConfirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (errors.confirmPassword)
+                      setErrors((e) => ({ ...e, confirmPassword: "" }));
+                  }}
                   secureTextEntry
                   autoCapitalize="none"
                 />
+                {errors.confirmPassword ? (
+                  <Text className="text-red-600 mb-2">
+                    {errors.confirmPassword}
+                  </Text>
+                ) : null}
               </View>
 
               <TouchableOpacity
                 className={`w-full py-4 rounded-xl items-center mb-4 ${
-                  isLoading ? "bg-gray-400" : "bg-green-700"
+                  isLoading ? "bg-gray-400" : "bg-green-800"
                 }`}
                 onPress={handleSignup}
                 disabled={isLoading}
@@ -206,7 +241,7 @@ export default function SignupScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity className="items-center" onPress={goToLogin}>
-                <Text className="text-green-700 text-base">
+                <Text className="text-green-800 text-base">
                   Already have an account? Sign in
                 </Text>
               </TouchableOpacity>
