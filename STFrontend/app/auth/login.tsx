@@ -1,0 +1,145 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import { router } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiPost } from "@/lib/api";
+
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+export default function LoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const loginData: LoginData = { email, password };
+      const user = await apiPost("/login", loginData);
+      await signIn(user);
+      router.replace("/(tabs)");
+    } catch (error) {
+      let errorMessage = "An error occurred";
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error && typeof error === "object" && "detail" in error) {
+        errorMessage = (error as any).detail;
+      } else if (error instanceof Error) {
+        try {
+          const parsed = JSON.parse(error.message);
+          if (parsed && typeof parsed === "object" && "detail" in parsed) {
+            errorMessage = parsed.detail;
+          } else {
+            errorMessage = error.message;
+          }
+        } catch {
+          errorMessage = error.message;
+        }
+      }
+      Alert.alert("Login Failed", errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const goToSignup = () => {
+    router.push("/auth/signup");
+  };
+
+  const goBack = () => {
+    router.back();
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
+          <View className="flex-1 px-8 pt-8">
+            {/* Header */}
+            <View className="mb-8">
+              <TouchableOpacity onPress={goBack} className="mb-4">
+                <Text className="text-green-700 text-lg">← Back</Text>
+              </TouchableOpacity>
+              <Text className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome Back
+              </Text>
+              <Text className="text-gray-600 text-lg">
+                Sign in to your account
+              </Text>
+            </View>
+
+            {/* Form */}
+            <View className="flex-1">
+              <View className="mb-4">
+                <Text className="text-gray-700 font-medium mb-2">Email</Text>
+                <TextInput
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View className="mb-6">
+                <Text className="text-gray-700 font-medium mb-2">Password</Text>
+                <TextInput
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
+                  placeholder="Enter your password"
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <TouchableOpacity
+                className={`w-full py-4 rounded-xl items-center mb-4 ${
+                  isLoading ? "bg-gray-400" : "bg-green-700"
+                }`}
+                onPress={handleLogin}
+                disabled={isLoading}
+              >
+                <Text className="text-white text-lg font-semibold">
+                  {isLoading ? "Signing In..." : "Sign In"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity className="items-center" onPress={goToSignup}>
+                <Text className="text-green-700 text-base">
+                  Don't have an account? Sign up
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
