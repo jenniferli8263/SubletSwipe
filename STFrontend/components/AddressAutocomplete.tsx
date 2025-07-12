@@ -33,6 +33,14 @@ export function AddressAutocomplete({
   const [selection, setSelection] = useState<
     { start: number; end: number } | undefined
   >(undefined);
+  const [hasFocused, setHasFocused] = useState(false);
+
+  useEffect(() => {
+    if (selection) {
+      const timeout = setTimeout(() => setSelection(undefined), 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [selection]);
 
   useEffect(() => {
     if (!submitted) return;
@@ -67,11 +75,13 @@ export function AddressAutocomplete({
         value={input}
         onChangeText={setInput}
         onSubmitEditing={() => {
+          setSelection({ start: input.length, end: input.length }); // reset selection - stops an ios bug
           setSubmitted(true);
         }}
         onFocus={() => {
-          if (input) {
+          if (!hasFocused && input) {
             setSelection({ start: 0, end: input.length });
+            setHasFocused(true);
           }
         }}
         selection={selection}

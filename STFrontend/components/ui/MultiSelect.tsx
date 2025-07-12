@@ -126,7 +126,7 @@ const MultiSelect = ({
         >
           <Pressable
             className="flex-1 justify-start bg-black/40"
-            onPress={() => setModalVisible(false)}
+            onPress={handleDone}
           >
             <Animated.View
               style={{
@@ -134,52 +134,53 @@ const MultiSelect = ({
                 transform: [{ translateY: slideAnim }],
                 maxHeight: "70%",
               }}
-              className="bg-white rounded-b-2xl p-4 pt-8"
             >
-              {/* Copy of select box at top for continuity */}
-              <View className="bg-gray-100 border border-gray-300 rounded px-3 py-3 mb-3 min-h-[42px] justify-center">
-                <Text className={"text-[#888]"}>{placeholder}</Text>
-              </View>
-              {/* Search bar */}
-              {searchable && (
-                <TextInput
-                  className="bg-gray-100 border border-gray-300 rounded px-3 py-2 mb-3"
-                  placeholder={searchPlaceholder}
-                  value={search}
-                  onChangeText={setSearch}
-                  autoFocus
-                />
-              )}
-              {/* Options list without checkboxes */}
-              <FlatList
-                data={filteredOptions}
-                keyExtractor={(item) => String(item.value)}
-                renderItem={({ item }) => (
-                  <Pressable
-                    className="flex-row items-center px-3 py-3 border-b border-gray-100"
-                    onPress={() => toggleOption(item.value)}
-                  >
-                    <Text
-                      className={
-                        selected.map(Number).includes(Number(item.value))
-                          ? "text-green-700 font-bold"
-                          : "text-gray-800"
-                      }
-                    >
-                      {item.label}
-                    </Text>
-                  </Pressable>
+              <View className="bg-white rounded-b-2xl p-4 pt-8">
+                {/* Copy of select box at top for continuity */}
+                <View className="bg-gray-100 border border-gray-300 rounded px-3 py-3 mb-3 min-h-[42px] justify-center">
+                  <Text className={"text-[#888]"}>{placeholder}</Text>
+                </View>
+                {/* Search bar */}
+                {searchable && (
+                  <TextInput
+                    className="bg-gray-100 border border-gray-300 rounded px-3 py-2 mb-3"
+                    placeholder={searchPlaceholder}
+                    value={search}
+                    onChangeText={setSearch}
+                    autoFocus
+                  />
                 )}
-                style={{ maxHeight: 250 }}
-                keyboardShouldPersistTaps="handled"
-              />
-              {/* Done/Close button */}
-              <TouchableOpacity
-                className="mt-4 py-3 rounded bg-gray-200 items-center"
-                onPress={handleDone}
-              >
-                <Text className="text-gray-700 font-semibold">Done</Text>
-              </TouchableOpacity>
+                {/* Options list without checkboxes */}
+                <FlatList
+                  data={filteredOptions}
+                  keyExtractor={(item) => String(item.value)}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      className="flex-row items-center px-3 py-3 border-b border-gray-100"
+                      onPress={() => toggleOption(item.value)}
+                    >
+                      <Text
+                        className={
+                          selected.map(Number).includes(Number(item.value))
+                            ? "text-green-700 font-bold"
+                            : "text-gray-800"
+                        }
+                      >
+                        {item.label}
+                      </Text>
+                    </Pressable>
+                  )}
+                  style={{ maxHeight: 250 }}
+                  keyboardShouldPersistTaps="handled"
+                />
+                {/* Done/Close button */}
+                <TouchableOpacity
+                  className="mt-4 py-3 rounded bg-gray-200 items-center"
+                  onPress={handleDone}
+                >
+                  <Text className="text-gray-700 font-semibold">Done</Text>
+                </TouchableOpacity>
+              </View>
             </Animated.View>
           </Pressable>
         </KeyboardAvoidingView>
