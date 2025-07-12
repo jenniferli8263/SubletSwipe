@@ -5,9 +5,16 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { apiGet, apiPost } from "@/lib/api";
+
+import * as ImagePicker from "expo-image-picker";
+
+const CLOUDINARY_UPLOAD_URL = "https://api.cloudinary.com/v1_1/ddmbdyidp/image/upload";
+const UPLOAD_PRESET = "sublettinder_photoupload";
+
 
 let Input: React.ComponentType<any>,
   Button: React.ComponentType<any>,
@@ -130,7 +137,7 @@ export default function AddListingScreen() {
     description: "",
     building_type_id: "",
     amenities: [] as number[],
-    photos: [] as string[],
+    photos: [] as {url: string, label: string}[],
     raw_address: "",
   });
   const [loading, setLoading] = useState(false);
@@ -197,14 +204,14 @@ export default function AddListingScreen() {
         : [...f.amenities, id],
     }));
   };
-  const handleTogglePhoto = (name: string) => {
-    setForm((f) => ({
-      ...f,
-      photos: f.photos.includes(name)
-        ? f.photos.filter((p) => p !== name)
-        : [...f.photos, name],
-    }));
-  };
+  // const handleTogglePhoto = (name: string) => {
+  //   setForm((f) => ({
+  //     ...f,
+  //     photos: f.photos.includes(name)
+  //       ? f.photos.filter((p) => p !== name)
+  //       : [...f.photos, name],
+  //   }));
+  // };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -221,10 +228,10 @@ export default function AddListingScreen() {
           ? Number(form.building_type_id)
           : undefined,
         amenities: form.amenities,
-        photos: form.photos.map((label) => ({ url: label, label })),
+        photos: form.photos,
         start_date: form.start_date,
         end_date: form.end_date,
-        target_gender: form.target_gender,
+        target_gender: form.target_gender || "prefer not to say",
         pet_friendly: Boolean(form.pet_friendly),
         utilities_incl: Boolean(form.utilities_incl),
         description: form.description,
@@ -238,9 +245,101 @@ export default function AddListingScreen() {
     }
   };
 
-  const handleAddPhoto = () => {
-    // TODO: Implement photo picker/upload logic
-    alert("Add Photo button pressed!");
+  async function uriToBlob(uri: string): Promise<Blob> {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return blob;
+  }
+
+  const handleAddPhoto = async () => {
+    // Step 1: Ask for permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission to access media library is required!");
+      return;
+    }
+
+    // Step 2: Let user pick an image
+    const result = await ImagePicker.launchImageLibraryAsync({
+      // mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'], // not sure if this might give undefined behaviour because the previous line said "MediaTypeOptions" is deprecated
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const image = result.assets[0];
+      const uri = image.uri;
+      let fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpg'; // Try to extract extension
+      const mimeMap: Record<string, string> = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        heic: 'image/heic',
+        webp: 'image/webp',
+      };
+
+      const mimeType = mimeMap[fileExt] ?? 'image/jpeg';
+      const base64String = image.base64;
+      fileExt = mimeType.split('/')[1];
+
+      if (!base64String) {
+        alert("Could not get image data.");
+        return;
+      }
+
+      const photo = {
+        uri,
+        type: mimeType,
+        name: `photo.${fileExt}`,
+      };
+      console.log("Photo object before upload:", photo);
+
+      // Step 3: Upload to Cloudinary
+      // const formData = new FormData();
+      // const formData = new FormData();
+      // formData.append("file", {
+      //   uri: photo.uri,
+      //   type: photo.type,
+      //   name: photo.name,
+      // } as any);
+      // const blob = await uriToBlob(photo.uri);
+      // formData.append("file", blob, photo.name);
+      // formData.append("upload_preset", UPLOAD_PRESET);
+      // formData.append("folder", "sublettinder/listingphotos");
+      // Upload using base64
+      const formData = new FormData();
+      formData.append("file", `data:${mimeType};base64,${base64String}`);
+      formData.append("upload_preset", UPLOAD_PRESET);
+      formData.append("folder", "sublettinder/listingphotos");
+
+      try {
+        const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+        console.log("Cloudinary upload response:", data);
+
+        if (!data.secure_url) {
+          throw new Error("Upload failed");
+        }
+
+        // Step 4: Save URL to form
+        setForm((f) => ({
+          ...f,
+          photos: [...f.photos, { url: data.secure_url, label: "" }],
+        }));
+        console.log("Photo added:", data.secure_url);
+      } catch (error) {
+        alert("Failed to upload image.");
+        console.error("Cloudinary upload error:", error);
+      }
+    }
+    // alert("Add Photo button pressed!");
   };
 
   return (
@@ -359,7 +458,7 @@ export default function AddListingScreen() {
           Add Photo
         </Button>
         <View className="flex-row flex-wrap mb-4">
-          {form.photos.map((name) => (
+          {/* {form.photos.map((name) => (
             <TouchableOpacity
               key={name}
               onPress={() => handleTogglePhoto(name)}
@@ -367,7 +466,40 @@ export default function AddListingScreen() {
             >
               <Text className="text-white text-sm">{name} ✕</Text>
             </TouchableOpacity>
+          ))} */}
+          {/* {form.photos.map((url) => (
+            <Image
+              key={url}
+              source={{ uri: url }}
+              style={{ width: 100, height: 100, marginBottom: 10, borderRadius: 8 }}
+            />
+          ))} */}
+          {form.photos.map((photo, index) => (
+            <View key={photo.url} style={{ marginBottom: 12 }}>
+              <Image
+                source={{ uri: photo.url }}
+                style={{ width: 100, height: 100, borderRadius: 8 }}
+              />
+              <TextInput
+                placeholder="Enter label (e.g., Living Room)"
+                value={photo.label}
+                onChangeText={(text) => {
+                  const newPhotos = [...form.photos];
+                  newPhotos[index].label = text;
+                  setForm({ ...form, photos: newPhotos });
+                }}
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 8,
+                  padding: 8,
+                  marginTop: 4,
+                  width: 200,
+                }}
+              />
+            </View>
           ))}
+
         </View>
         <Button
           onPress={handleSubmit}
