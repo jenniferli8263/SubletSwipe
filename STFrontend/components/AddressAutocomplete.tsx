@@ -42,24 +42,44 @@ export function AddressAutocomplete({
     }
   }, [selection]);
 
-  useEffect(() => {
-    if (!submitted) return;
-
+  const search = () => {
     setLoading(true);
     apiGet(`/locations/${encodeURIComponent(input)}`)
       .then((data) => {
         setPredictions(data.predictions || []);
         setShowDropdown(true);
       })
-      .catch(() => setPredictions([]))
+      .catch(() => {
+        setPredictions([]);
+      })
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  // debounced search
+  useEffect(() => {
+    if (!input.trim()) {
+      setPredictions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const delay = setTimeout(() => {
+      search();
+    }, 500); // debounce delay
+
+    return () => clearTimeout(delay);
+  }, [input]);
+
+  useEffect(() => {
+    if (!submitted) return;
+
+    search();
   }, [submitted]);
 
   useEffect(() => {
     setSubmitted(false);
-    setShowDropdown(false);
   }, [input]);
 
   const handleSelect = (description: string) => {
@@ -87,8 +107,7 @@ export function AddressAutocomplete({
         selection={selection}
         className=""
       />
-      {loading && <ActivityIndicator size="small" className="mt-2" />}
-      {showDropdown && !loading && predictions.length === 0 && (
+      {showDropdown && !loading && submitted && predictions.length === 0 && (
         <View className="bg-whiterounded p-3">
           <Text className="text-gray-500 text-center">No results found</Text>
         </View>
