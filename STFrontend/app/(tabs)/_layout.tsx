@@ -58,6 +58,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="mutual-matches"
+        options={{
+          title: "Mutual Matches",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="person.crop.circle.badge.checkmark" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
