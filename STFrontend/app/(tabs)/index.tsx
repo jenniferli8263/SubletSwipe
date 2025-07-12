@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { apiGet } from "@/lib/api";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useAuth } from "@/contexts/AuthContext";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
@@ -32,14 +34,16 @@ export default function TabsHome() {
   const [error, setError] = useState("");
   const [showOutOfMatches, setShowOutOfMatches] = useState(false);
   const swiperRef = useRef<any>(null);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const fetchMatches = async () => {
+      if (!user) return;
+
       setLoading(true);
       setError("");
       try {
-        // TODO: replace hardcoded renter_id
-        const data = await apiGet("/renters/1/matches");
+        const data = await apiGet(`/renters/${user.id}/matches`);
         setMatches(data.matches || []);
         setShowOutOfMatches(false); // reset when new matches are loaded
       } catch (e: any) {
@@ -49,7 +53,7 @@ export default function TabsHome() {
       }
     };
     fetchMatches();
-  }, []);
+  }, [user]);
 
   const handleSwipeLeft = useCallback((i: number) => {
     console.log("swiped left on ", matches[i]);
@@ -59,12 +63,15 @@ export default function TabsHome() {
     // TODO
   }, []);
 
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Logout", style: "destructive", onPress: signOut },
+    ]);
+  };
+
   if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <Text>Loading matches...</Text>
-      </View>
-    );
+    return <LoadingSpinner message="Loading matches..." />;
   }
   if (error) {
     return (
@@ -76,6 +83,15 @@ export default function TabsHome() {
   if (!matches.length) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
+        {/* Logout button for testing */}
+        <View className="absolute top-12 left-4 right-4 z-10 flex-row justify-between items-center">
+          <TouchableOpacity
+            onPress={handleLogout}
+            className="px-3 py-1 bg-red-500 rounded-lg"
+          >
+            <Text className="text-white text-sm">Logout</Text>
+          </TouchableOpacity>
+        </View>
         <Text>No matches found.</Text>
       </View>
     );
