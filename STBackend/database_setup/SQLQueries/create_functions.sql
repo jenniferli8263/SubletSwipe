@@ -76,10 +76,10 @@ RETURNS TABLE (
     start_date date,
     end_date date,
     has_pet boolean,
-    utilities_incl boolean,
     locations_id bigint,
     building_type_id integer,
     gender gender_enum,
+    bio text,
     address_string character varying(255),
     distance_km double precision
 ) AS $$
@@ -96,10 +96,10 @@ BEGIN
             r.start_date,
             r.end_date,
             r.has_pet,
-            r.utilities_incl,
             r.locations_id,
             r.building_type_id,
             r.gender,
+            r.bio,
             loc.address_string,
             6371 * 2 * ASIN(SQRT(
                 POWER(SIN(RADIANS(loc.latitude - loc_ref.latitude) / 2), 2) +
@@ -123,8 +123,8 @@ BEGIN
           )
           AND NOT EXISTS (
               SELECT 1 FROM listing_on_renter lor
-              WHERE lor.listing_id = r.id
-                AND lor.renter_profile_id = l.id
+              WHERE lor.listing_id = l.id
+                AND lor.renter_profile_id = r.id
           )
     )
     SELECT * FROM base

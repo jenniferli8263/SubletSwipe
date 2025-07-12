@@ -10,35 +10,41 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { ActiveRoleProvider } from "@/components/ActiveRoleContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function AppContent() {
   const colorScheme = useColorScheme();
   const { isLoading } = useAuth();
+  const [fontsLoaded] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
 
-  if (isLoading) return <LoadingSpinner message="Loading..." />;
+  if (isLoading || !fontsLoaded) {
+    // Show loading spinner if auth or fonts are loading
+    return <LoadingSpinner message="Loading..." />;
+  }
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="auth" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <ActiveRoleProvider>
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "#fff" }}
+          edges={["top"]}
+        >
+          <Stack>
+            <Stack.Screen name="auth" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+          <StatusBar style="auto" />
+        </SafeAreaView>
+      </ActiveRoleProvider>
     </ThemeProvider>
   );
 }
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
   return (
     <AuthProvider>
       <AppContent />
