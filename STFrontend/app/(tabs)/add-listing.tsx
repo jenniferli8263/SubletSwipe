@@ -195,9 +195,14 @@ export default function AddListingScreen() {
       const data = await uploadRes.json();
       if (!data.secure_url) throw new Error("Upload failed");
 
+      console.log("Uploaded photo:", {
+        label: photo.label,
+        url: data.secure_url,
+      });
+
       uploadedPhotos.push({ url: data.secure_url, label: photo.label });
     }
-    
+
     try {
       const payload = {
         ...form,
