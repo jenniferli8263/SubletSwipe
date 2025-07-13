@@ -103,9 +103,9 @@ export default function HomePageSwiper({
           <Swiper
             ref={swiperRef}
             cards={matches}
-            renderCard={(rec: any) => (
+            renderCard={(match: any) => (
               <SwiperCard
-                rec={rec}
+                match={match}
                 swiperRef={swiperRef}
                 isRenter={isRenter}
                 height={availableHeight}
@@ -130,12 +130,12 @@ export default function HomePageSwiper({
 }
 
 function SwiperCard({
-  rec,
+  match,
   swiperRef,
   isRenter,
   height,
 }: {
-  rec: any;
+  match: any;
   swiperRef: React.RefObject<any>;
   isRenter: boolean;
   height: number;
@@ -148,9 +148,9 @@ function SwiperCard({
       {/* Content area, clips overflow*/}
       <View style={{ flex: 1, overflow: "hidden" }}>
         {isRenter ? (
-          <ListingCardContent rec={rec} />
+          <ListingCardContent match={match} />
         ) : (
-          <RenterCardContent rec={rec} />
+          <RenterCardContent match={match} />
         )}
       </View>
       {/* Buttons*/}

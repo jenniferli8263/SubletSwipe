@@ -23,10 +23,10 @@ function formatDate(dateStr: string) {
   return `${month} ${day}${getOrdinal(day)}`;
 }
 
-export default function RenterCardContent({ rec }: { rec: any }) {
+export default function RenterCardContent({ match }: { match: any }) {
   let city = "";
-  if (rec.address_string) {
-    const parts = rec.address_string.split(",");
+  if (match.address_string) {
+    const parts = match.address_string.split(",");
     if (parts.length >= 2) {
       city = parts[1].trim();
     }
@@ -36,9 +36,9 @@ export default function RenterCardContent({ rec }: { rec: any }) {
     <View className="flex-1 flex-col items-center p-2 justify-center">
       {/* Photo or icon */}
       <View className="flex-1 w-full min-h-[120px] mt-2 p-6 justify-center items-center">
-        {rec.renter_profile_photo && rec.renter_profile_photo !== "NaN" ? (
+        {match.renter_profile_photo && match.renter_profile_photo !== "NaN" ? (
           <Image
-            source={{ uri: rec.renter_profile_photo }}
+            source={{ uri: match.renter_profile_photo }}
             className="h-full aspect-square w-auto rounded-xl"
             style={{ resizeMode: "cover" }}
           />
@@ -51,7 +51,7 @@ export default function RenterCardContent({ rec }: { rec: any }) {
       <View className="w-full p-2">
         {/* Name */}
         <Text className="text-3xl font-bold text-left w-full mb-0.5">
-          {rec.renter_first_name} {rec.renter_last_name}
+          {match.renter_first_name} {match.renter_last_name}
         </Text>
         {/* City and Dates */}
         {city && (
@@ -64,12 +64,12 @@ export default function RenterCardContent({ rec }: { rec: any }) {
       <View className="bg-white rounded-xl border border-gray-200 p-4 w-full mb-4">
         <Text className="text-sm font-semibold">Stay Duration</Text>
         <Text className="text-2xl font-semibold mb-3">
-          {formatDate(rec.start_date)} - {formatDate(rec.end_date)}
+          {formatDate(match.start_date)} - {formatDate(match.end_date)}
         </Text>
 
         <Text className="text-sm font-semibold">Budget</Text>
         <Text className="text-2xl font-bold mb-1">
-          ${Math.round(rec.budget).toLocaleString()}{" "}
+          ${Math.round(match.budget).toLocaleString()}{" "}
           <Text className="font-normal text-base text-gray-500">/ month</Text>
         </Text>
 
@@ -77,10 +77,10 @@ export default function RenterCardContent({ rec }: { rec: any }) {
 
         <Text className="text-sm font-semibold">Looking for</Text>
         <Text className="text-2xl font-semibold mb-1">
-          {rec.num_bedrooms} Beds, {rec.num_bathrooms} Baths
+          {match.num_bedrooms} Beds, {match.num_bathrooms} Baths
         </Text>
-        {rec.building_type && (
-          <Text className="mb-1 text-gray-700">{rec.building_type}</Text>
+        {match.building_type && (
+          <Text className="mb-1 text-gray-700">{match.building_type}</Text>
         )}
       </View>
 
@@ -88,7 +88,7 @@ export default function RenterCardContent({ rec }: { rec: any }) {
       {/* <View className="bg-white rounded-xl border border-gray-200 p-6 w-full mb-3 min-h-[64px]">
         <Text className="font-bold mb-1">Bio</Text>
         <Text className="text-gray-700" numberOfLines={2} ellipsizeMode="tail">
-          {rec.bio || "No bio provided."}
+          {match.bio || "No bio provided."}
         </Text>
       </View> */}
     </View>

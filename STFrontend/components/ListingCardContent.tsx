@@ -37,11 +37,13 @@ function getTruncatedAddress(address: string) {
   return truncated;
 }
 
-export default function ListingCardContent({ rec }: { rec: any }) {
+export default function ListingCardContent({ match }: { match: any }) {
   return (
     <View className="flex-1 flex-col p-2">
       <Text className="text-2xl font-bold mb-0.5 text-left">
-        {rec.lister_name ? `${rec.lister_name}'s Apartment` : "Apartment"}
+        {match.lister_name && match.building_type
+          ? `${match.lister_name}'s ${match.building_type}`
+          : "Listing"}
       </Text>
       <View className="flex-row items-center mb-2">
         <MaterialIcons size={16} name={"location-on"} color={"#505050"} />
@@ -50,26 +52,26 @@ export default function ListingCardContent({ rec }: { rec: any }) {
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {getTruncatedAddress(rec.address_string)}
+          {getTruncatedAddress(match.address_string)}
         </Text>
       </View>
       <View className="border border-gray-200 rounded-lg p-4 w-full my-3 items-start">
         <Text className="text-2xl font-semibold mb">
-          ${Math.round(rec.asking_price).toLocaleString()}
+          ${Math.round(match.asking_price).toLocaleString()}
           <Text className="font-normal text-base text-gray-500"> / month</Text>
         </Text>
         <Text className="text-gray-700 mt-2">
-          {formatDate(rec.start_date)} - {formatDate(rec.end_date)}
+          {formatDate(match.start_date)} - {formatDate(match.end_date)}
         </Text>
         <View className="h-px bg-gray-200 my-4 w-full" />
         <Text className="text-base text-gray-700">
-          {rec.num_bedrooms} Beds, {rec.num_bathrooms} Baths
+          {match.num_bedrooms} Beds, {match.num_bathrooms} Baths
         </Text>
       </View>
       <View className="flex-1 w-full min-h-[120px] mb-4 my-3">
-        {rec.photo_url ? (
+        {match.photo_url ? (
           <Image
-            source={{ uri: rec.photo_url }}
+            source={{ uri: match.photo_url }}
             className="flex-1 w-full h-full rounded-xl"
             style={{ resizeMode: "cover" }}
           />
