@@ -86,7 +86,11 @@ const Select = ({
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
       >
-        <Text className={selectedLabel ? "text-[#222]" : "text-[#888]"}>
+        <Text
+          style={{
+            color: disabled ? "#9ca3af" : selectedLabel ? "#222222" : "#888888",
+          }}
+        >
           {selectedLabel || placeholder}
         </Text>
       </TouchableOpacity>
