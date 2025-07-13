@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { apiGet, apiPost } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Input from "@/components/ui/Input";
@@ -8,12 +7,9 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Checkbox from "@/components/ui/Checkbox";
 import MultiSelect from "@/components/ui/MultiSelect";
+import PhotoUploader from "@/components/ui/PhotoUploader";
 import { AddressAutocomplete } from "../../components/AddressAutocomplete";
-
-import * as ImagePicker from "expo-image-picker";
-
-const CLOUDINARY_UPLOAD_URL = "https://api.cloudinary.com/v1_1/ddmbdyidp/image/upload";
-const UPLOAD_PRESET = "sublettinder_photoupload";
+import { PhotoData, uploadPhotosToCloudinary } from "@/lib/imageUtils";
 
 export default function AddListingScreen() {
   const { user } = useAuth();
@@ -30,7 +26,7 @@ export default function AddListingScreen() {
     description: "",
     building_type_id: "",
     amenities: [] as number[],
-    photos: [] as { uri: string; label: string; base64: string }[],
+    photos: [] as PhotoData[],
     raw_address: "",
   });
   const [loading, setLoading] = useState(false);
@@ -105,16 +101,8 @@ export default function AddListingScreen() {
     }));
   };
 
-  const extractCloudinaryPublicId = (url: string): string | null => {
-    const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)\./);
-    return match ? match[1] : null;
-  };
-
-  const handleDeletePhoto = (uri: string) => {
-    setForm((prev) => ({
-      ...prev,
-      photos: prev.photos.filter((photo) => photo.uri !== uri),
-    }));
+  const handlePhotosChange = (photos: PhotoData[]) => {
+    setForm((prev) => ({ ...prev, photos }));
   };
 
   const handleSubmit = async () => {
@@ -169,39 +157,8 @@ export default function AddListingScreen() {
     }
     setErrors({});
 
-    const uploadedPhotos: { url: string; label: string }[] = [];
-
-    for (const photo of form.photos) {
-      const fileExt = photo.uri.split(".").pop()?.toLowerCase() ?? "jpg";
-      const mimeMap: Record<string, string> = {
-        jpg: "image/jpeg",
-        jpeg: "image/jpeg",
-        png: "image/png",
-        heic: "image/heic",
-        webp: "image/webp",
-      };
-      const mimeType = mimeMap[fileExt] ?? "image/jpeg";
-
-      const formData = new FormData();
-      formData.append("file", `data:${mimeType};base64,${photo.base64}`);
-      formData.append("upload_preset", UPLOAD_PRESET);
-      formData.append("folder", "sublettinder/listingphotos");
-
-      const uploadRes = await fetch(CLOUDINARY_UPLOAD_URL, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await uploadRes.json();
-      if (!data.secure_url) throw new Error("Upload failed");
-
-      console.log("Uploaded photo:", {
-        label: photo.label,
-        url: data.secure_url,
-      });
-
-      uploadedPhotos.push({ url: data.secure_url, label: photo.label });
-    }
+    // Upload photos to Cloudinary
+    const uploadedPhotos = await uploadPhotosToCloudinary(form.photos);
 
     try {
       const payload = {
@@ -231,37 +188,7 @@ export default function AddListingScreen() {
     }
   };
 
-  const handleAddPhoto = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      alert("Permission to access media library is required!");
-      return;
-    }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-      base64: true
-    });
-
-    if (!result.canceled && result.assets.length > 0) {
-      const image = result.assets[0];
-      const uri = image.uri;
-      const base64 = image.base64;
-
-      if (!base64) {
-        alert("Could not get image data.");
-        return;
-      }
-
-      setForm((f) => ({
-        ...f,
-        photos: [...f.photos, { uri, label: "", base64 }],
-      }));
-    }
-  };
 
   return (
     <ScrollView
@@ -416,52 +343,12 @@ export default function AddListingScreen() {
             numberOfLines={3}
           />
         </View>
-        <Text className="mb-1">Photos</Text>
-        <Button onPress={handleAddPhoto} className="mb-2">
-          Add Photo
-        </Button>
-        <View className="flex-row flex-wrap mb-4">
-          {form.photos.map((photo, index) => (
-            <View key={photo.uri} style={{ marginBottom: 12, position: "relative", marginRight: 12 }}>
-              <Image
-                source={{ uri: photo.uri }}
-                style={{ width: 100, height: 100, borderRadius: 8 }}
-              />
-              <TouchableOpacity
-                onPress={() => handleDeletePhoto(photo.uri)}
-                style={{
-                  position: "absolute",
-                  top: 2,
-                  right: 2,
-                  backgroundColor: "rgba(0,0,0,0.6)",
-                  borderRadius: 12,
-                  paddingHorizontal: 6,
-                  paddingVertical: 2,
-                }}
-              >
-                <Text style={{ color: "white", fontSize: 12 }}>✕</Text>
-              </TouchableOpacity>
-
-              <TextInput
-                placeholder="Enter label (e.g., Living Room)"
-                value={photo.label}
-                onChangeText={(text) => {
-                  const newPhotos = [...form.photos];
-                  newPhotos[index].label = text;
-                  setForm({ ...form, photos: newPhotos });
-                }}
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#ccc",
-                  borderRadius: 8,
-                  padding: 8,
-                  marginTop: 4,
-                  width: 200,
-                }}
-              />
-            </View>
-          ))}
-        </View>
+        <PhotoUploader
+          photos={form.photos}
+          onPhotosChange={handlePhotosChange}
+          maxPhotos={20}
+          className="mb-4"
+        />
         <Button onPress={handleSubmit} disabled={loading}>
           {loading ? "Submitting..." : "Create Listing"}
         </Button>
