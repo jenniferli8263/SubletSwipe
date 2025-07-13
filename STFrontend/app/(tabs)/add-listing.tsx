@@ -31,7 +31,7 @@ export default function AddListingScreen() {
     description: "",
     building_type_id: "",
     amenities: [] as number[],
-    photos: [] as {url: string, label: string}[],
+    photos: [] as { uri: string; label: string; base64: string }[],
     raw_address: "",
   });
   const [loading, setLoading] = useState(false);
@@ -105,14 +105,18 @@ export default function AddListingScreen() {
         : [...f.amenities, id],
     }));
   };
-  // const handleTogglePhoto = (name: string) => {
-  //   setForm((f) => ({
-  //     ...f,
-  //     photos: f.photos.includes(name)
-  //       ? f.photos.filter((p) => p !== name)
-  //       : [...f.photos, name],
-  //   }));
-  // };
+
+  const extractCloudinaryPublicId = (url: string): string | null => {
+    const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)\./);
+    return match ? match[1] : null;
+  };
+
+  const handleDeletePhoto = (uri: string) => {
+    setForm((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((photo) => photo.uri !== uri),
+    }));
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -166,6 +170,35 @@ export default function AddListingScreen() {
     }
     setErrors({});
 
+    const uploadedPhotos: { url: string; label: string }[] = [];
+
+    for (const photo of form.photos) {
+      const fileExt = photo.uri.split(".").pop()?.toLowerCase() ?? "jpg";
+      const mimeMap: Record<string, string> = {
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        heic: "image/heic",
+        webp: "image/webp",
+      };
+      const mimeType = mimeMap[fileExt] ?? "image/jpeg";
+
+      const formData = new FormData();
+      formData.append("file", `data:${mimeType};base64,${photo.base64}`);
+      formData.append("upload_preset", UPLOAD_PRESET);
+      formData.append("folder", "sublettinder/listingphotos");
+
+      const uploadRes = await fetch(CLOUDINARY_UPLOAD_URL, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await uploadRes.json();
+      if (!data.secure_url) throw new Error("Upload failed");
+
+      uploadedPhotos.push({ url: data.secure_url, label: photo.label });
+    }
+    
     try {
       const payload = {
         ...form,
@@ -177,7 +210,7 @@ export default function AddListingScreen() {
           ? Number(form.building_type_id)
           : undefined,
         amenities: form.amenities,
-        photos: form.photos,
+        photos: uploadedPhotos,
         start_date: form.start_date,
         end_date: form.end_date,
         target_gender: form.target_gender || "prefer not to say",
@@ -194,101 +227,36 @@ export default function AddListingScreen() {
     }
   };
 
-  async function uriToBlob(uri: string): Promise<Blob> {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    return blob;
-  }
-
   const handleAddPhoto = async () => {
-    // Step 1: Ask for permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       alert("Permission to access media library is required!");
       return;
     }
 
-    // Step 2: Let user pick an image
     const result = await ImagePicker.launchImageLibraryAsync({
-      // mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      mediaTypes: ['images'], // not sure if this might give undefined behaviour because the previous line said "MediaTypeOptions" is deprecated
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
-      base64: true,
+      base64: true
     });
 
     if (!result.canceled && result.assets.length > 0) {
       const image = result.assets[0];
       const uri = image.uri;
-      let fileExt = uri.split('.').pop()?.toLowerCase() ?? 'jpg'; // Try to extract extension
-      const mimeMap: Record<string, string> = {
-        jpg: 'image/jpeg',
-        jpeg: 'image/jpeg',
-        png: 'image/png',
-        heic: 'image/heic',
-        webp: 'image/webp',
-      };
+      const base64 = image.base64;
 
-      const mimeType = mimeMap[fileExt] ?? 'image/jpeg';
-      const base64String = image.base64;
-      fileExt = mimeType.split('/')[1];
-
-      if (!base64String) {
+      if (!base64) {
         alert("Could not get image data.");
         return;
       }
 
-      const photo = {
-        uri,
-        type: mimeType,
-        name: `photo.${fileExt}`,
-      };
-      console.log("Photo object before upload:", photo);
-
-      // Step 3: Upload to Cloudinary
-      // const formData = new FormData();
-      // const formData = new FormData();
-      // formData.append("file", {
-      //   uri: photo.uri,
-      //   type: photo.type,
-      //   name: photo.name,
-      // } as any);
-      // const blob = await uriToBlob(photo.uri);
-      // formData.append("file", blob, photo.name);
-      // formData.append("upload_preset", UPLOAD_PRESET);
-      // formData.append("folder", "sublettinder/listingphotos");
-      // Upload using base64
-      const formData = new FormData();
-      formData.append("file", `data:${mimeType};base64,${base64String}`);
-      formData.append("upload_preset", UPLOAD_PRESET);
-      formData.append("folder", "sublettinder/listingphotos");
-
-      try {
-        const response = await fetch(CLOUDINARY_UPLOAD_URL, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
-        console.log("Cloudinary upload response:", data);
-
-        if (!data.secure_url) {
-          throw new Error("Upload failed");
-        }
-
-        // Step 4: Save URL to form
-        setForm((f) => ({
-          ...f,
-          photos: [...f.photos, { url: data.secure_url, label: "" }],
-        }));
-        console.log("Photo added:", data.secure_url);
-      } catch (error) {
-        alert("Failed to upload image.");
-        console.error("Cloudinary upload error:", error);
-      }
+      setForm((f) => ({
+        ...f,
+        photos: [...f.photos, { uri, label: "", base64 }],
+      }));
     }
-    // alert("Add Photo button pressed!");
   };
 
   return (
@@ -449,28 +417,27 @@ export default function AddListingScreen() {
           Add Photo
         </Button>
         <View className="flex-row flex-wrap mb-4">
-          {/* {form.photos.map((name) => (
-            <TouchableOpacity
-              key={name}
-              onPress={() => handleTogglePhoto(name)}
-              className="bg-green-700 px-3 py-1 rounded-full mr-2 mb-2"
-            >
-              <Text className="text-white text-sm">{name} ✕</Text>
-            </TouchableOpacity>
-          ))} */}
-          {/* {form.photos.map((url) => (
-            <Image
-              key={url}
-              source={{ uri: url }}
-              style={{ width: 100, height: 100, marginBottom: 10, borderRadius: 8 }}
-            />
-          ))} */}
           {form.photos.map((photo, index) => (
-            <View key={photo.url} style={{ marginBottom: 12 }}>
+            <View key={photo.uri} style={{ marginBottom: 12, position: "relative", marginRight: 12 }}>
               <Image
-                source={{ uri: photo.url }}
+                source={{ uri: photo.uri }}
                 style={{ width: 100, height: 100, borderRadius: 8 }}
               />
+              <TouchableOpacity
+                onPress={() => handleDeletePhoto(photo.uri)}
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  right: 2,
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  borderRadius: 12,
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                }}
+              >
+                <Text style={{ color: "white", fontSize: 12 }}>✕</Text>
+              </TouchableOpacity>
+
               <TextInput
                 placeholder="Enter label (e.g., Living Room)"
                 value={photo.label}
@@ -490,7 +457,6 @@ export default function AddListingScreen() {
               />
             </View>
           ))}
-
         </View>
         <Button onPress={handleSubmit} disabled={loading}>
           {loading ? "Submitting..." : "Create Listing"}
