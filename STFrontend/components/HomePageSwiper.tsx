@@ -33,7 +33,7 @@ function formatDate(dateStr: string) {
 }
 
 interface HomePageSwiperProps {
-  recs: any[];
+  matches: any[];
   loading: boolean;
   error: string;
   swiperRef: React.RefObject<any>;
@@ -41,22 +41,22 @@ interface HomePageSwiperProps {
 }
 
 export default function HomePageSwiper({
-  recs,
+  matches,
   loading,
   error,
   swiperRef,
   isRenter,
 }: HomePageSwiperProps) {
-  const [showOutOfRecs, setShowOutOfRecs] = useState(false);
+  const [showOutOfMatches, setShowOutOfMatches] = useState(false);
   const [availableHeight, setAvailableHeight] = useState<number | null>(null);
   const bottomBarHeight = useBottomTabBarHeight();
 
   const handleSwipeLeft = (i: number) => {
-    console.log("swiped left on ", recs[i]);
+    console.log("swiped left on ", matches[i]);
   };
 
   const handleSwipeRight = (i: number) => {
-    console.log("swiped right on ", recs[i]);
+    console.log("swiped right on ", matches[i]);
   };
 
   if (loading) {
@@ -69,17 +69,17 @@ export default function HomePageSwiper({
       </View>
     );
   }
-  if (!recs.length) {
+  if (!matches.length) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <Text>No recs found.</Text>
+        <Text>No matches found.</Text>
       </View>
     );
   }
 
   return (
     <View className="flex-1 justify-center items-center bg-white">
-      {showOutOfRecs && (
+      {showOutOfMatches && (
         <View
           pointerEvents="none"
           className="absolute inset-0 justify-center items-center z-0"
@@ -99,7 +99,7 @@ export default function HomePageSwiper({
         {availableHeight !== null && (
           <Swiper
             ref={swiperRef}
-            cards={recs}
+            cards={matches}
             renderCard={(rec: any) => (
               <SwiperCard
                 rec={rec}
@@ -114,7 +114,7 @@ export default function HomePageSwiper({
             showSecondCard={true}
             onSwipedLeft={handleSwipeLeft}
             onSwipedRight={handleSwipeRight}
-            onSwipedAll={() => setShowOutOfRecs(true)}
+            onSwipedAll={() => setShowOutOfMatches(true)}
             disableTopSwipe
             disableBottomSwipe
             verticalSwipe={false}

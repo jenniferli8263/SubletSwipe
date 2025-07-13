@@ -10,7 +10,7 @@ import { View } from "react-native";
 
 export default function TabsHome() {
   const { isRenter, resourceId } = useActiveRole();
-  const [recs, setRecs] = useState<any[]>([]);
+  const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const swiperRef = useRef<any>(null);
@@ -18,10 +18,10 @@ export default function TabsHome() {
 
   useEffect(() => {
     const url = `/${isRenter ? "renters" : "listings"}/${resourceId}/${
-      isRenter ? "listing_recs" : "renter_recs"
+      isRenter ? "listing_matches" : "renter_matches"
     }`;
     console.log(url);
-    const fetchRecs = async () => {
+    const fetchMatches = async () => {
       if (!user) return;
 
       setLoading(true);
@@ -29,20 +29,20 @@ export default function TabsHome() {
       try {
         const data = await apiGet(url);
         console.log(data);
-        setRecs(data.recs || []);
+        setMatches(data.matches || []);
       } catch (e: any) {
-        setError(e.message || "Error fetching recs");
+        setError(e.message || "Error fetching matches");
       } finally {
         setLoading(false);
       }
     };
-    fetchRecs();
+    fetchMatches();
   }, [user, isRenter]);
 
   return (
     <View className="flex-1 bg-white">
       <HomePageSwiper
-        recs={recs}
+        matches={matches}
         loading={loading}
         error={error}
         swiperRef={swiperRef}

@@ -240,8 +240,8 @@ async def partial_update_listing(listing_id: int, listing: ListingUpdate):
     return {"message": "Listing updated successfully"}
 
 
-@router.get("/listings/{listing_id}/renter_recs")
-async def get_renter_recs(listing_id: int):
+@router.get("/listings/{listing_id}/renter_matches")
+async def get_renter_matches(listing_id: int):
     query = """
 WITH score_params AS (
     SELECT
@@ -290,9 +290,9 @@ ORDER BY score DESC;
     async with pool.acquire() as connection:
         rows = await connection.fetch(query, listing_id)
         if not rows:
-            return {"recs": [], "message": "No renter recs found for this listing"}
-        recs = [dict(row) for row in rows]
-        return {"recs": recs, "count": len(recs)}
+            return {"matches": [], "message": "No renter matches found for this listing"}
+        matches = [dict(row) for row in rows]
+        return {"matches": matches, "count": len(matches)}
 
 
 

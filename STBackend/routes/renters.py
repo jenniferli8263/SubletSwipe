@@ -177,8 +177,8 @@ async def update_renter_profile(renter_id: int, profile: RenterProfileUpdate):
     return {"message": "Renter profile updated successfully"}
 
 
-@router.get("/renters/{renter_id}/listing_recs")
-async def get_renter_recs(renter_id: int):
+@router.get("/renters/{renter_id}/listing_matches")
+async def get_renter_matches(renter_id: int):
     query = """
 WITH score_params AS (
     SELECT
@@ -237,7 +237,7 @@ ORDER BY score DESC;
     async with pool.acquire() as connection:
         rows = await connection.fetch(query, renter_id)
         if not rows:
-            return {"recs": [], "message": "No recs found for this renter"}
+            return {"matches": [], "message": "No matches found for this renter"}
         
-        recs = [dict(row) for row in rows]
-        return {"recs": recs, "count": len(recs)}
+        matches = [dict(row) for row in rows]
+        return {"matches": matches, "count": len(matches)}
