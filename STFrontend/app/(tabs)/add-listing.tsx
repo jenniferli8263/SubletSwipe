@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, TextInput } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { apiGet, apiPost } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -15,8 +16,10 @@ const CLOUDINARY_UPLOAD_URL = "https://api.cloudinary.com/v1_1/ddmbdyidp/image/u
 const UPLOAD_PRESET = "sublettinder_photoupload";
 
 export default function AddListingScreen() {
+  const { user } = useAuth();
   const [form, setForm] = useState({
-    user_id: 1,
+    user_id: user?.id || 0,
+    locations_id: "",
     start_date: "",
     end_date: "",
     target_gender: "",
@@ -82,6 +85,13 @@ export default function AddListingScreen() {
       loadGenderOptions(),
     ]);
   }, []);
+
+  // Update user_id when user changes
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({ ...prev, user_id: user.id }));
+    }
+  }, [user]);
 
   const handleChange = (key: string, value: any) => {
     setForm({ ...form, [key]: value });

@@ -93,3 +93,7 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     profile_photo: Optional[str] = None
+
+class SwipeCreate(BaseModel):
+    target_id: int
+    is_right: bool
