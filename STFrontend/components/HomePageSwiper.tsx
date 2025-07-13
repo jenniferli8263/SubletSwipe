@@ -10,6 +10,9 @@ import Swiper from "react-native-deck-swiper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import LoadingIndicator from "./ui/LoadingIndicator";
+import { Background } from "@react-navigation/elements";
+import ListingCardContent from "./ListingCardContent";
+import RenterCardContent from "./RenterCardContent";
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
@@ -168,113 +171,6 @@ function SwiperCard({
           <MaterialIcons size={28} name="favorite-border" color="#505050" />
         </TouchableOpacity>
       </View>
-    </View>
-  );
-}
-
-function ListingCardContent({ rec }: { rec: any }) {
-  return (
-    <View className="flex-1 flex-col">
-      <Text className="text-2xl font-bold mb-0.5 text-left">
-        {rec.lister_name ? `${rec.lister_name}'s Apartment` : "Apartment"}
-      </Text>
-      <View className="flex-row items-center mb-2">
-        <MaterialIcons size={16} name={"location-on"} color={"#505050"} />
-        <Text className="text-sm text-gray-700 ml-1">{rec.address_string}</Text>
-      </View>
-      <View className="border border-gray-200 rounded-lg p-3 w-full mb-2 items-start">
-        <View className="flex-row items-end">
-          <Text className="text-2xl font-bold text-gray-900">
-            ${Math.round(rec.asking_price).toLocaleString()}
-          </Text>
-          <Text className="text-lg text-gray-500 font-semibold ml-1">
-            /month
-          </Text>
-        </View>
-        <Text className="text-sm text-gray-700 mt-1">
-          {formatDate(rec.start_date)} - {formatDate(rec.end_date)}
-        </Text>
-        <View className="h-px bg-gray-200 my-4 w-full" />
-        <Text className="text-base text-gray-700">
-          {rec.num_bedrooms} Beds, {rec.num_bathrooms} Baths
-        </Text>
-      </View>
-      <View className="flex-1 w-full min-h-[120px] mb-4 mt-2">
-        {rec.photo_url ? (
-          <Image
-            source={{ uri: rec.photo_url }}
-            className="flex-1 w-full h-full rounded-xl"
-            style={{ resizeMode: "cover" }}
-          />
-        ) : (
-          <View className="flex-1 w-full h-full rounded-xl bg-gray-200 justify-center items-center">
-            <Text>No Photo</Text>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-function RenterCardContent({ rec }: { rec: any }) {
-  let city = "";
-  if (rec.address_string) {
-    const parts = rec.address_string.split(",");
-    if (parts.length >= 2) {
-      city = parts[1].trim();
-    }
-  }
-
-  return (
-    <View className="flex-1 flex-col items-center px-2 pt-2 justify-center">
-      {/* Photo or icon */}
-      {rec.renter_profile_photo && rec.renter_profile_photo !== "NaN" ? (
-        <Image
-          source={{ uri: rec.renter_profile_photo }}
-          className="w-40 h-40 rounded-xl mb-6"
-          style={{ resizeMode: "cover" }}
-        />
-      ) : (
-        <View className="w-40 h-40 rounded-xl bg-gray-200 justify-center items-center mb-6">
-          <MaterialIcons size={128} name="person" color="#505050" />
-        </View>
-      )}
-      <View className="w-full p-2">
-        {/* Name */}
-        <Text className="text-3xl font-bold text-left w-full mb-0.5">
-          {rec.renter_first_name} {rec.renter_last_name}
-        </Text>
-        {/* City and Dates */}
-        {city && (
-          <Text className="font-semibold text-base text-left w-full mb-0.5">
-            Staying in {city}
-          </Text>
-        )}
-        <Text className="text-base text-gray-700 text-left w-full mb-3">
-          {formatDate(rec.start_date)} - {formatDate(rec.end_date)}
-        </Text>
-      </View>
-      {/* Building Card */}
-      <View className="bg-white rounded-xl border border-gray-200 p-6 w-full mb-4">
-        <Text className="font-bold mb-1">Building</Text>
-        <Text className="mb-1">{rec.building_type || "Any"}</Text>
-        <Text className="text-gray-700">
-          {rec.num_bedrooms} Beds, {rec.num_bathrooms} Baths
-        </Text>
-      </View>
-      {/* Budget Card */}
-      <View className="bg-white rounded-xl border border-gray-200 p-6 w-full mb-4">
-        <Text className="font-bold mb-1">Budget</Text>
-        <Text className="mb-1">
-          ${Math.round(rec.budget).toLocaleString()}{" "}
-          <Text className="text-gray-500">/month</Text>
-        </Text>
-      </View>
-      {/* About Card - NO SPACE
-      <View className="bg-white rounded-xl border border-gray-200 p-6 w-full mb-3 min-h-[64px]">
-        <Text className="font-bold mb-1">About</Text>
-        <Text className="text-gray-700">{rec.bio || "No bio provided."}</Text>
-      </View> */}
     </View>
   );
 }
