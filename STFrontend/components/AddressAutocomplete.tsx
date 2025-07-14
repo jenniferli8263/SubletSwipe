@@ -22,11 +22,13 @@ interface Prediction {
 interface AddressAutocompleteProps {
   value: string;
   onSubmitCallback: (description: string) => void;
+  disabled?: boolean;
 }
 
 export function AddressAutocomplete({
   value,
   onSubmitCallback,
+  disabled = false,
 }: AddressAutocompleteProps) {
   const [input, setInput] = useState<string>(value || "");
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -107,8 +109,10 @@ export function AddressAutocomplete({
   return (
     <View className="mb-2">
       <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        activeOpacity={0.8}
+        onPress={() => {
+          if (!disabled) setModalVisible(true);
+        }}
+        activeOpacity={disabled ? 1 : 0.8}
         className="w-full"
       >
         <View pointerEvents="none">
@@ -116,7 +120,18 @@ export function AddressAutocomplete({
             placeholder="Search"
             value={input}
             editable={false}
-            className="bg-white"
+            style={{
+              backgroundColor: disabled ? "#e5e7eb" : "#f3f4f6",
+              borderColor: disabled ? "#e5e7eb" : "#d1d5db",
+              borderWidth: 1,
+              borderRadius: 12,
+              paddingVertical: 16,
+              paddingHorizontal: 12,
+              minHeight: 42,
+              justifyContent: "center",
+              color: disabled ? "#9ca3af" : "#111827",
+              borderStyle: disabled ? "dashed" : "solid",
+            }}
           />
         </View>
       </TouchableOpacity>
