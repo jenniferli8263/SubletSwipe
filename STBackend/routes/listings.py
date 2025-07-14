@@ -113,9 +113,11 @@ async def get_listing(listing_id: int):
         SELECT 
             l.id,
             l.user_id,
+            u.first_name,
+            u.last_name,
+            u.email,
+            u.profile_photo,
             l.locations_id,
-            u.first_name || ' ' || u.last_name AS poster_name,
-            u.email AS poster_email,
             l.is_active,
             l.start_date,
             l.end_date,
@@ -130,17 +132,24 @@ async def get_listing(listing_id: int):
             loc.latitude,
             loc.longitude,
             bt.id AS building_type_id,
+            bt.type AS building_type,
             COALESCE(
                 (SELECT json_agg(json_build_object('url', p.url, 'label', p.label))
                 FROM photos p
                 WHERE p.listing_id = l.id), '[]'
             ) AS photos,
             COALESCE(
+                (SELECT json_agg(a.name)
+                FROM listing_amenities la
+                JOIN amenities a ON la.amenity_id = a.id
+                WHERE la.listing_id = l.id), '[]'
+            ) AS amenities,
+            COALESCE(
                 (SELECT json_agg(a.id)
                 FROM listing_amenities la
                 JOIN amenities a ON la.amenity_id = a.id
                 WHERE la.listing_id = l.id), '[]'
-            ) AS amenities
+            ) AS amenity_ids
         FROM listings l
         JOIN users u ON l.user_id = u.id
         JOIN locations loc ON l.locations_id = loc.id

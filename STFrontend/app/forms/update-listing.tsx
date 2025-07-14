@@ -6,7 +6,9 @@ import { apiGet, apiPatch } from "@/lib/api";
 
 export default function UpdateListingScreen() {
   const { listingId } = useLocalSearchParams();
-  const [initialValues, setInitialValues] = useState<ListingFormData | null>(null);
+  const [initialValues, setInitialValues] = useState<ListingFormData | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -22,7 +24,7 @@ export default function UpdateListingScreen() {
         // const parsedPhotos = JSON.parse(listing.photos || "[]");
         // const flatPhotos = parsedPhotos.map((p: any) => p.label);
 
-        const parsedAmenities = JSON.parse(listing.amenities || "[]");
+        const parsedAmenities = JSON.parse(listing.amenity_ids || "[]");
 
         // setOriginalPhotos(flatPhotos);
 
@@ -84,9 +86,13 @@ export default function UpdateListingScreen() {
       setMessage("Listing updated!");
     } catch (e: any) {
       if (e.message?.includes("chk_term_length")) {
-        setErrors({ check_constraint: "The term length should be at least a month." });
+        setErrors({
+          check_constraint: "The term length should be at least a month.",
+        });
       } else if (e.message?.includes("chk_start_date_future")) {
-        setErrors({ check_constraint: "The start date must be in the future." });
+        setErrors({
+          check_constraint: "The start date must be in the future.",
+        });
       } else {
         setMessage(e.message || "Error updating listing");
       }

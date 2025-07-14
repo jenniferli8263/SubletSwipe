@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
+import { View, Text, type TextStyle } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -11,23 +11,52 @@ import "../global.css";
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
+  const activeIconBgStyle = {
+    position: 'absolute' as const,
+    width: 70,
+    height: 36,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+    zIndex: 0,
+    alignSelf: 'center' as const,
+  };
+
+  const tabLabelStyle = (focused: boolean) => ({
+    color: focused ? '#111' : '#888',
+    fontWeight: focused ? 'bold' : 'normal',
+    fontSize: 12,
+    marginTop: 4,
+  } as TextStyle);
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#166534", // Tailwind green-800
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: Platform.select({
-          default: { backgroundColor: "white" },
-        }),
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 0,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+          tabBarIcon: ({ focused }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              {focused ? (
+                <>
+                  <View style={activeIconBgStyle} />
+                  <IconSymbol size={30} name="house.fill" color={focused ? '#111' : '#888'} style={{ zIndex: 1 }} />
+                </>
+              ) : (
+                <IconSymbol size={30} name="house" color={focused ? '#111' : '#888'} style={{ zIndex: 1 }} />
+              )}
+            </View>
+          ),
+          tabBarLabel: ({ focused }) => (
+            <Text style={tabLabelStyle(focused)}>Home</Text>
           ),
         }}
       />
@@ -35,17 +64,20 @@ export default function TabLayout() {
         name="deactivate-listing"
         options={{
           title: "Deactivate",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="minus.circle.fill" color={color} />
+          tabBarIcon: ({ focused }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              {focused ? (
+                <>
+                  <View style={activeIconBgStyle} />
+                  <IconSymbol size={30} name="minus.circle.fill" color={focused ? '#111' : '#888'} style={{ zIndex: 1 }} />
+                </>
+              ) : (
+                <IconSymbol size={30} name="minus.circle" color={focused ? '#111' : '#888'} style={{ zIndex: 1 }} />
+              )}
+            </View>
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="listing"
-        options={{
-          title: "Listing Details",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="mappin.and.ellipse" color={color} />
+          tabBarLabel: ({ focused }) => (
+            <Text style={tabLabelStyle(focused)}>Deactivate</Text>
           ),
         }}
       />
@@ -53,11 +85,24 @@ export default function TabLayout() {
         name="mutual-matches"
         options={{
           title: "Mutual Matches",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.crop.circle.badge.checkmark" color={color} />
+          tabBarIcon: ({ focused }) => (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              {focused ? (
+                <>
+                  <View style={activeIconBgStyle} />
+                  <IconSymbol size={30} name="person.2.fill" color={focused ? '#111' : '#888'} style={{ zIndex: 1 }} />
+                </>
+              ) : (
+                <IconSymbol size={30} name="person.2" color={focused ? '#111' : '#888'} style={{ zIndex: 1 }} />
+              )}
+            </View>
+          ),
+          tabBarLabel: ({ focused }) => (
+            <Text style={tabLabelStyle(focused)}>Matches</Text>
           ),
         }}
       />
     </Tabs>
   );
 }
+

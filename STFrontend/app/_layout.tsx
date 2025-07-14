@@ -35,6 +35,10 @@ function AppContent() {
           <Stack>
             <Stack.Screen name="auth" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="listing-details/[id]"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="forms" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </Stack>
