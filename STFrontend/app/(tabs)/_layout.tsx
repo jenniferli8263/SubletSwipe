@@ -102,6 +102,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="account-management"
+        options={{
+          title: "Account Management",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="mappin.and.ellipse" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
