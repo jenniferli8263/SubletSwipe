@@ -10,7 +10,7 @@ import Swiper from "react-native-deck-swiper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import LoadingIndicator from "./ui/LoadingIndicator";
-import { Background } from "@react-navigation/elements";
+import { useRouter } from "expo-router";
 import ListingCardContent from "./ListingCardContent";
 import RenterCardContent from "./RenterCardContent";
 
@@ -140,32 +140,34 @@ function SwiperCard({
   isRenter: boolean;
   height: number;
 }) {
+  const router = useRouter();
   return (
     <View
       style={{ top: -24, height }}
       className="w-[90vw] max-w-xl bg-white rounded-2xl p-7 flex flex-col shadow-md mx-auto justify-center mb-10"
     >
       {/* Content area, clips overflow*/}
-      <View style={{ flex: 1, overflow: "hidden" }}>
+      <TouchableOpacity
+        style={{ flex: 1, overflow: "hidden" }}
+        activeOpacity={0.85}
+        onPress={() => router.push(`/listing-details/${match.id}`)}
+      >
         {isRenter ? (
           <ListingCardContent match={match} />
         ) : (
           <RenterCardContent match={match} />
         )}
-      </View>
+      </TouchableOpacity>
       {/* Buttons*/}
-      <View className="flex-row justify-between w-full mt-2 mb-0">
+      <View className="flex-row justify-center w-full mt-2 mb-0">
         <TouchableOpacity
-          className="w-12 h-12 rounded-full bg-gray-100 justify-center items-center"
+          className="w-12 h-12 rounded-full bg-gray-100 justify-center items-center mx-4"
           onPress={() => swiperRef.current?.swipeLeft()}
         >
           <MaterialIcons size={28} name="highlight-off" color="#505050" />
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 mx-3 bg-green-800 rounded-lg justify-center items-center h-12">
-          <Text className="text-white font-bold">Details</Text>
-        </TouchableOpacity>
         <TouchableOpacity
-          className="w-12 h-12 rounded-full bg-gray-100 justify-center items-center"
+          className="w-12 h-12 rounded-full bg-gray-100 justify-center items-center mx-4"
           onPress={() => swiperRef.current?.swipeRight()}
         >
           <MaterialIcons size={28} name="favorite-border" color="#505050" />
