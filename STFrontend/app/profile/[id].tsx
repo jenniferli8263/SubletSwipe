@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -29,6 +29,8 @@ export default function LandlordProfilePage() {
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -76,6 +78,21 @@ export default function LandlordProfilePage() {
 
   const handleListingPress = (listingId: number) => {
     router.push(`/listing-details/${listingId}` as any);
+  };
+
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const cardWidth = Dimensions.get("window").width * 0.9; // 90vw
+    const index = Math.round(contentOffset / cardWidth);
+    setCurrentIndex(index);
+  };
+
+  const scrollToIndex = (index: number) => {
+    const cardWidth = Dimensions.get("window").width * 0.9;
+    scrollViewRef.current?.scrollTo({
+      x: index * cardWidth,
+      animated: true,
+    });
   };
 
   return (
@@ -148,23 +165,56 @@ export default function LandlordProfilePage() {
               </Text>
             </View>
           ) : (
-            <View className="space-y-4">
-              {listings.map((listing) => (
-                <TouchableOpacity
-                  key={listing.id}
-                  onPress={() => handleListingPress(listing.id)}
-                  className="bg-white rounded-lg border border-gray-200 overflow-hidden"
-                  style={{
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                    elevation: 3,
-                  }}
-                >
-                  <ListingCardContent match={listing} />
-                </TouchableOpacity>
-              ))}
+            <View>
+              <ScrollView
+                ref={scrollViewRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                pagingEnabled
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+                contentContainerStyle={{ paddingHorizontal: 15 }}
+                className="mb-4"
+              >
+                {listings.map((listing, index) => (
+                  <View
+                    key={listing.id}
+                    className="w-[90vw] max-w-xl bg-white rounded-2xl p-7 flex flex-col shadow-md mr-8 mt-4 mb-4"
+                    style={{
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 4,
+                      elevation: 3,
+                      width: Dimensions.get("window").width * 0.85,
+                      // maxWidth: 448,
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={{ flex: 1, overflow: "hidden" }}
+                      activeOpacity={0.85}
+                      onPress={() => handleListingPress(listing.id)}
+                    >
+                      <ListingCardContent match={listing} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+
+              {/* Pagination Dots */}
+              {listings.length > 1 && (
+                <View className="flex-row justify-center items-center mb-4">
+                  {listings.map((_, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => scrollToIndex(index)}
+                      className={`w-2 h-2 rounded-full mx-1 ${
+                        index === currentIndex ? "bg-green-800" : "bg-gray-300"
+                      }`}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
           )}
         </View>
