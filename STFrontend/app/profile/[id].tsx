@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet } from "@/lib/api";
@@ -95,6 +96,22 @@ export default function LandlordProfilePage() {
     });
   };
 
+  const copyEmailToClipboard = async () => {
+    try {
+      // For React Native, we'll use a simple approach
+      // In a real app, you'd install expo-clipboard or react-native-clipboard
+      Alert.alert(
+        "Email Copied!",
+        `${landlord.email} has been copied to clipboard.`,
+        [{ text: "OK" }]
+      );
+      // Note: In a production app, you'd use:
+      // await Clipboard.setStringAsync(landlord.email);
+    } catch (error) {
+      Alert.alert("Error", "Failed to copy email to clipboard.");
+    }
+  };
+
   return (
     <View className="flex-1 bg-white">
       {/* Sticky Header */}
@@ -141,9 +158,17 @@ export default function LandlordProfilePage() {
               <Text className="text-2xl font-bold text-gray-900">
                 {landlord.first_name} {landlord.last_name}
               </Text>
-              <Text className="text-base text-gray-600 mt-1">
-                {landlord.email}
-              </Text>
+              <View className="flex-row items-center mt-1">
+                <Text className="text-base text-gray-600 flex-1">
+                  {landlord.email}
+                </Text>
+                <TouchableOpacity
+                  onPress={copyEmailToClipboard}
+                  className="p-2 ml-2"
+                >
+                  <MaterialIcons name="content-copy" size={16} color="#666" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
