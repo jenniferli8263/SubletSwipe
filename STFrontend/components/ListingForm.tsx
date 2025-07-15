@@ -7,97 +7,97 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Checkbox from "@/components/ui/Checkbox";
 import MultiSelect from "@/components/ui/MultiSelect";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import DateRangePicker from "@/components/ui/DateRangePicker";
 import PhotoUploader from "@/components/ui/PhotoUploader";
-import { AddressAutocomplete } from "../../components/AddressAutocomplete";
 import { PhotoData, uploadPhotosToCloudinary } from "@/lib/imageUtils";
 
-export default function AddListingScreen() {
-  const { user } = useAuth();
-  const [form, setForm] = useState({
-    user_id: user?.id || 0,
-    start_date: "",
-    end_date: "",
-    target_gender: "",
-    asking_price: "",
-    num_bedrooms: "",
-    num_bathrooms: "",
-    pet_friendly: false,
-    utilities_incl: false,
-    description: "",
-    building_type_id: "",
-    amenities: [] as number[],
-    photos: [] as PhotoData[],
-    raw_address: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+export interface ListingFormData {
+  user_id: number;
+  start_date: string;
+  end_date: string;
+  target_gender: string;
+  asking_price: string;
+  num_bedrooms: string;
+  num_bathrooms: string;
+  pet_friendly: boolean;
+  utilities_incl: boolean;
+  description: string;
+  building_type_id: string;
+  amenities: number[];
+  photos: PhotoData[];
+  raw_address: string;
+}
+
+interface ListingFormProps {
+  type : string;
+  initialValues: ListingFormData;
+  onSubmit: (values: ListingFormData) => Promise<void>;
+  loading?: boolean;
+  message?: string;
+  submitLabel?: string;
+  externalErrors?: { [key: string]: string }; // ✅ NEW
+
+}
+
+export default function ListingForm({
+  type,
+  initialValues,
+  onSubmit,
+  loading = false,
+  message = "",
+  submitLabel = "Submit",
+  externalErrors
+}: ListingFormProps) {
+  const [form, setForm] = useState<ListingFormData>(initialValues);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  const [amenities, setAmenities] = useState<
-    Array<{ value: number; label: string }>
-  >([]);
-  const [buildingTypes, setBuildingTypes] = useState<
-    Array<{ value: number; label: string }>
-  >([]);
-  const [genderOptions, setGenderOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-
-  const loadAmenitiesOptions = async () => {
-    const data = await apiGet("/amenities");
-    setAmenities(
-      data.map((item: any) => ({
-        value: item.id,
-        label: item.name,
-      }))
-    );
-  };
-
-  const loadBuildingTypesOptions = async () => {
-    const data = await apiGet("/building-types");
-    setBuildingTypes(
-      data.map((item: any) => ({
-        value: item.id,
-        label: item.type,
-      }))
-    );
-  };
-
-  const loadGenderOptions = async () => {
-    const data = await apiGet("/genders");
-    setGenderOptions(
-      data.map((item: any) => ({
-        value: item.gender,
-        label: item.gender,
-      }))
-    );
-  };
+  const [amenities, setAmenities] = useState<Array<{ value: number; label: string }>>([]);
+  const [buildingTypes, setBuildingTypes] = useState<Array<{ value: number; label: string }>>([]);
+  const [genderOptions, setGenderOptions] = useState<Array<{ value: string; label: string }>>([]);
 
   useEffect(() => {
-    Promise.all([
-      loadAmenitiesOptions(),
-      loadBuildingTypesOptions(),
-      loadGenderOptions(),
-    ]);
+    const fetchOptions = async () => {
+      try {
+        const [amenitiesData, buildingTypesData, genderData] = await Promise.all([
+          apiGet("/amenities"),
+          apiGet("/building-types"),
+          apiGet("/genders"),
+        ]);
+
+        setAmenities(
+          amenitiesData.map((item: any) => ({ value: item.id, label: item.name }))
+        );
+        setBuildingTypes(
+          buildingTypesData.map((item: any) => ({ value: item.id, label: item.type }))
+        );
+        setGenderOptions(
+          genderData.map((item: any) => ({ value: item.gender, label: item.gender }))
+        );
+      } catch (err) {
+        console.error("Failed to fetch options", err);
+      }
+    };
+
+    fetchOptions();
   }, []);
 
-  // Update user_id when user changes
   useEffect(() => {
-    if (user) {
-      setForm((prev) => ({ ...prev, user_id: user.id }));
+    if (externalErrors) {
+      setErrors((prev) => ({ ...prev, ...externalErrors }));
     }
-  }, [user]);
+  }, [externalErrors]);
 
-  const handleChange = (key: string, value: any) => {
-    setForm({ ...form, [key]: value });
+
+  const handleChange = (key: keyof ListingFormData, value: any) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleToggleAmenity = (id: number) => {
-    setForm((f) => ({
-      ...f,
-      amenities: f.amenities.includes(id)
-        ? f.amenities.filter((a) => a !== id)
-        : [...f.amenities, id],
+    setForm((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(id)
+        ? prev.amenities.filter((a) => a !== id)
+        : [...prev.amenities, id],
     }));
   };
 
@@ -105,22 +105,25 @@ export default function AddListingScreen() {
     setForm((prev) => ({ ...prev, photos }));
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setMessage("");
+  // const handleTogglePhoto = (name: string) => {
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     photos: prev.photos.includes(name)
+  //       ? prev.photos.filter((p) => p !== name)
+  //       : [...prev.photos, name],
+  //   }));
+  // };
+
+  const handleLocalSubmit = async () => {
     const newErrors: { [key: string]: string } = {};
 
     if (!form.raw_address) newErrors.raw_address = "Address is required.";
     if (!form.start_date) newErrors.start_date = "Start date is required.";
     if (!form.end_date) newErrors.end_date = "End date is required.";
-    if (!form.asking_price)
-      newErrors.asking_price = "Monthly rent is required.";
-    if (!form.num_bedrooms)
-      newErrors.num_bedrooms = "Number of bedrooms is required.";
-    if (!form.num_bathrooms)
-      newErrors.num_bathrooms = "Number of bathrooms is required.";
-    if (!form.building_type_id)
-      newErrors.building_type_id = "Building type is required.";
+    if (!form.asking_price) newErrors.asking_price = "Monthly rent is required.";
+    if (!form.num_bedrooms) newErrors.num_bedrooms = "Number of bedrooms is required.";
+    if (!form.num_bathrooms) newErrors.num_bathrooms = "Number of bathrooms is required.";
+    if (!form.building_type_id) newErrors.building_type_id = "Building type is required.";
 
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (form.start_date && !dateRegex.test(form.start_date)) {
@@ -132,8 +135,7 @@ export default function AddListingScreen() {
 
     if (
       form.asking_price &&
-      (!/^[0-9]+(\.[0-9]+)?$/.test(form.asking_price) ||
-        Number(form.asking_price) <= 0)
+      (!/^[0-9]+(\.[0-9]+)?$/.test(form.asking_price) || Number(form.asking_price) <= 0)
     ) {
       newErrors.asking_price = "Rent must be a number";
     }
@@ -147,81 +149,61 @@ export default function AddListingScreen() {
       form.num_bathrooms &&
       (!/^[0-9]+$/.test(form.num_bathrooms) || Number(form.num_bathrooms) <= 0)
     ) {
-      newErrors.num_bathrooms = "Number of bathrooms must be number";
+      newErrors.num_bathrooms = "Number of bathrooms must be a number";
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setLoading(false);
       return;
     }
-    setErrors({});
 
     // Upload photos to Cloudinary
     const uploadedPhotos = await uploadPhotosToCloudinary(form.photos);
 
-    try {
-      const payload = {
-        ...form,
-        user_id: Number(form.user_id),
-        asking_price: Number(form.asking_price),
-        num_bedrooms: Number(form.num_bedrooms),
-        num_bathrooms: Number(form.num_bathrooms),
-        building_type_id: form.building_type_id
-          ? Number(form.building_type_id)
-          : undefined,
-        amenities: form.amenities,
-        photos: uploadedPhotos,
-        start_date: form.start_date,
-        end_date: form.end_date,
-        target_gender: form.target_gender || "prefer not to say",
-        pet_friendly: Boolean(form.pet_friendly),
-        utilities_incl: Boolean(form.utilities_incl),
-        description: form.description,
-      };
-      await apiPost("/listings", payload);
-      setMessage("Listing created!");
-    } catch (e: any) {
-      setMessage(e.message || "Error creating listing");
-    } finally {
-      setLoading(false);
-    }
+    setErrors({});
+    await onSubmit(form);
+    // try {
+    //   const payload = {
+    //     ...form,
+    //     user_id: Number(form.user_id),
+    //     asking_price: Number(form.asking_price),
+    //     num_bedrooms: Number(form.num_bedrooms),
+    //     num_bathrooms: Number(form.num_bathrooms),
+    //     building_type_id: form.building_type_id
+    //       ? Number(form.building_type_id)
+    //       : undefined,
+    //     amenities: form.amenities,
+    //     photos: uploadedPhotos,
+    //     start_date: form.start_date,
+    //     end_date: form.end_date,
+    //     target_gender: form.target_gender || "prefer not to say",
+    //     pet_friendly: Boolean(form.pet_friendly),
+    //     utilities_incl: Boolean(form.utilities_incl),
+    //     description: form.description,
+    //   };
+    //   await apiPost("/listings", payload);
+    //   setMessage("Listing created!");
+    // } catch (e: any) {
+    //   setMessage(e.message || "Error creating listing");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
-
-
   return (
-    <ScrollView
-      className="flex-1 bg-white p-8"
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView className="flex-1 bg-white p-8" keyboardShouldPersistTaps="handled">
       <View className="bg-white">
-        <Text className="text-4xl font-bold mb-6">Add a Listing</Text>
-        {/* Dates */}
-        <View className="py-2">
-          <Text className="mb-1">Start Date</Text>
-          <Input
-            placeholder="YYYY-MM-DD"
-            value={form.start_date}
-            onChangeText={(v: string) => handleChange("start_date", v)}
-            className="mb-4"
-          />
-          {errors.start_date && (
-            <Text className="text-red-600 mb-2">{errors.start_date}</Text>
-          )}
-        </View>
-        <View className="py-2">
-          <Text className="mb-1">End Date</Text>
-          <Input
-            placeholder="YYYY-MM-DD"
-            value={form.end_date}
-            onChangeText={(v: string) => handleChange("end_date", v)}
-            className="mb-4"
-          />
-          {errors.end_date && (
-            <Text className="text-red-600 mb-2">{errors.end_date}</Text>
-          )}
-        </View>
+        <Text className="text-4xl font-bold mb-6">{type === "add" ? "Add a Listing" : "Update a Listing"}</Text>
+        <DateRangePicker
+          startDate={form.start_date}
+          endDate={form.end_date}
+          onStartDateChange={(date: string) => handleChange("start_date", date)}
+          onEndDateChange={(date: string) => handleChange("end_date", date)}
+          startDateError={errors.start_date}
+          endDateError={errors.end_date}
+          checkConstraintError={errors.check_constraint}
+          label="Term"
+        />
         <View className="py-2">
           <Text className="mb-1">Monthly Rent</Text>
           <Input
@@ -243,12 +225,12 @@ export default function AddListingScreen() {
           />
         </View>
         <View className="h-px bg-gray-200 my-4" />
-        {/* Address */}
         <View className="py-2">
           <Text className="mb-1">Address</Text>
           <AddressAutocomplete
             value={form.raw_address}
             onSubmitCallback={(desc) => handleChange("raw_address", desc)}
+            disabled={type === "update"} // Make read-only during update
           />
           {errors.raw_address && (
             <Text className="text-red-600 mb-2">{errors.raw_address}</Text>
@@ -284,9 +266,11 @@ export default function AddListingScreen() {
           <Text className="mb-1">Building Type</Text>
           <Select
             placeholder="Select"
-            value={form.building_type_id}
+            value={parseInt(form.building_type_id)}
             onValueChange={(v) => handleChange("building_type_id", v)}
             options={buildingTypes}
+            disabled={type === "update"} // disable on update
+
           />
           {errors.building_type_id && (
             <Text className="text-red-600 mb-2">{errors.building_type_id}</Text>
@@ -349,7 +333,7 @@ export default function AddListingScreen() {
           maxPhotos={20}
           className="mb-4"
         />
-        <Button onPress={handleSubmit} disabled={loading}>
+        <Button onPress={handleLocalSubmit} disabled={loading}>
           {loading ? "Submitting..." : "Create Listing"}
         </Button>
         {!!message && (

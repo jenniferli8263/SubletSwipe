@@ -12,7 +12,7 @@ const ActiveRoleContext = createContext<ActiveRoleContextProps | undefined>(
 );
 
 export const ActiveRoleProvider = ({ children }: { children: ReactNode }) => {
-  const [isRenter, setIsRenter] = useState<boolean>(false);
+  const [isRenter, setIsRenter] = useState<boolean>(true);
   const [resourceId, setResourceId] = useState<number>(1);
 
   return (
