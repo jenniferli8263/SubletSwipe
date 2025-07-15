@@ -267,7 +267,10 @@ export default function ListingDetailsPage() {
           <Text className="text-lg font-semibold mb-3 text-gray-900">
             Seller Details
           </Text>
-          <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.push(`/profile/${listing.user_id}` as any)}
+            className="flex-row items-center"
+          >
             {listing.profile_photo !== "NaN" ? (
               <Image
                 source={{ uri: listing.profile_photo }}
@@ -279,12 +282,16 @@ export default function ListingDetailsPage() {
                 <MaterialIcons name="person" size={24} color="#888" />
               </View>
             )}
-            <View>
+            <View className="flex-1">
               <Text className="text-base text-gray-900 font-bold">
                 {listing.first_name} {listing.last_name}
               </Text>
+              <Text className="text-sm text-gray-500 mt-1">
+                Tap to view profile
+              </Text>
             </View>
-          </View>
+            <MaterialIcons name="chevron-right" size={20} color="#888" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

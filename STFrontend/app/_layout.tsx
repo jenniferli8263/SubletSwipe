@@ -39,6 +39,10 @@ function AppContent() {
               name="listing-details/[id]"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="profile/[id]"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="forms" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </Stack>
