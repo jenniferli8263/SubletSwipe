@@ -37,7 +37,9 @@ export const uploadPhotoToCloudinary = async (photo: PhotoData): Promise<Uploade
   });
 
   if (!response.ok) {
-    throw new Error(`Upload failed: ${response.statusText}`);
+    const errorText = await response.text();
+    console.error(`Upload failed: ${response.statusText}`, errorText);
+    throw new Error(`Upload failed: ${response.statusText}\n${errorText}`);
   }
 
   const data = await response.json();

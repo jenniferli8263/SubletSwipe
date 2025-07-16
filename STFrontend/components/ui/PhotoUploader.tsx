@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, TextInput, Alert } from "react-native";
+import { View, Text, TouchableOpacity, Image, TextInput, Alert, Modal, Pressable, StyleSheet, Dimensions } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { PhotoData } from "@/lib/imageUtils";
 import Button from "./Button";
@@ -12,28 +12,23 @@ interface PhotoUploaderProps {
   className?: string;
 }
 
+const windowWidth = Dimensions.get('window').width;
+const MODAL_SIZE = Math.min(windowWidth * 0.85, 350);
+const SQUARE_SIZE = MODAL_SIZE * 0.7;
+
 export default function PhotoUploader({ 
   photos, 
   onPhotosChange, 
   maxPhotos = 10,
   className = ""
 }: PhotoUploaderProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentPhoto, setCurrentPhoto] = useState<PhotoData | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Required",
-        "Permission to access media library is required to upload photos.",
-        [{ text: "OK" }]
-      );
-      return false;
-    }
-    return true;
-  };
-
-  const handleAddPhoto = async () => {
+  // Open modal for new photo
+  const handleAddPhoto = () => {
     if (photos.length >= maxPhotos) {
       Alert.alert(
         "Maximum Photos Reached",
@@ -42,10 +37,29 @@ export default function PhotoUploader({
       );
       return;
     }
+    setCurrentPhoto(null);
+    setEditingIndex(null);
+    setModalVisible(true);
+  };
 
-    const hasPermission = await requestPermissions();
-    if (!hasPermission) return;
+  // Open modal for editing existing photo
+  const handleEditPhoto = (index: number) => {
+    setCurrentPhoto(photos[index]);
+    setEditingIndex(index);
+    setModalVisible(true);
+  };
 
+  // Pick image from library
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Permission to access media library is required to upload photos.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
     setUploading(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -55,24 +69,13 @@ export default function PhotoUploader({
         quality: 1,
         base64: true
       });
-
       if (!result.canceled && result.assets.length > 0) {
         const image = result.assets[0];
-        const uri = image.uri;
-        const base64 = image.base64;
-
-        if (!base64) {
-          Alert.alert("Error", "Could not get image data.");
-          return;
-        }
-
-        const newPhoto: PhotoData = {
-          uri,
-          label: "",
-          base64
-        };
-
-        onPhotosChange([...photos, newPhoto]);
+        setCurrentPhoto({
+          uri: image.uri,
+          label: currentPhoto?.label || "",
+          base64: image.base64 || ""
+        });
       }
     } catch (error) {
       Alert.alert("Error", "Failed to select image. Please try again.");
@@ -82,15 +85,45 @@ export default function PhotoUploader({
     }
   };
 
-  const handleDeletePhoto = (uri: string) => {
-    onPhotosChange(photos.filter(photo => photo.uri !== uri));
+  // Handle label change in modal
+  const handleLabelChange = (label: string) => {
+    if (currentPhoto) {
+      setCurrentPhoto({ ...currentPhoto, label });
+    }
   };
 
-  const handlePhotoLabelChange = (uri: string, label: string) => {
-    const updatedPhotos = photos.map(photo => 
-      photo.uri === uri ? { ...photo, label } : photo
-    );
-    onPhotosChange(updatedPhotos);
+  // Upload (add or update) photo
+  const handleUpload = () => {
+    if (!currentPhoto || !currentPhoto.uri || !currentPhoto.base64) {
+      Alert.alert("No photo selected", "Please select a photo to upload.");
+      return;
+    }
+    if (!currentPhoto.label.trim()) {
+      Alert.alert("Label required", "Please enter a label for the photo.");
+      return;
+    }
+    let newPhotos = [...photos];
+    if (editingIndex !== null) {
+      newPhotos[editingIndex] = currentPhoto;
+    } else {
+      newPhotos.push(currentPhoto);
+    }
+    onPhotosChange(newPhotos);
+    setModalVisible(false);
+    setCurrentPhoto(null);
+    setEditingIndex(null);
+  };
+
+  // Delete (clear) current photo in modal
+  const handleDelete = () => {
+    if (editingIndex !== null) {
+      let newPhotos = [...photos];
+      newPhotos.splice(editingIndex, 1);
+      onPhotosChange(newPhotos);
+    }
+    setModalVisible(false);
+    setCurrentPhoto(null);
+    setEditingIndex(null);
   };
 
   return (
@@ -101,7 +134,6 @@ export default function PhotoUploader({
           {photos.length}/{maxPhotos}
         </Text>
       </View>
-      
       <Button 
         onPress={handleAddPhoto} 
         disabled={uploading || photos.length >= maxPhotos}
@@ -110,37 +142,108 @@ export default function PhotoUploader({
         {uploading ? "Selecting..." : "Add Photo"}
       </Button>
 
+      {/* Modal Overlay for Add/Edit Photo */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalBox}>
+            {/* Square area for image */}
+            <Pressable
+              style={[styles.square, { borderColor: '#888', borderWidth: 2, marginBottom: 16 }]}
+              onPress={pickImage}
+              disabled={uploading}
+            >
+              {currentPhoto && currentPhoto.uri ? (
+                <Image source={{ uri: currentPhoto.uri }} style={styles.squareImg} />
+              ) : (
+                <Text style={{ color: '#888', textAlign: 'center' }}>
+                  Click here to add a photo
+                </Text>
+              )}
+            </Pressable>
+            {/* Label input */}
+            <Input
+              placeholder="Label"
+              value={currentPhoto?.label || ""}
+              onChangeText={handleLabelChange}
+              className="mb-4"
+              style={{ width: '100%' }}
+            />
+            {/* Upload & Delete buttons */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Button onPress={handleUpload} className="flex-1 mr-2">
+                {editingIndex !== null ? "Update" : "Upload"}
+              </Button>
+              <Button onPress={handleDelete} className="flex-1 ml-2">
+                Delete
+              </Button>
+            </View>
+            <Button onPress={() => setModalVisible(false)} className="mt-4">
+              Cancel
+            </Button>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Display uploaded photos */}
       {photos.length > 0 && (
         <View className="flex-row flex-wrap">
           {photos.map((photo, index) => (
-            <View 
-              key={photo.uri} 
-              className="mb-3 mr-3 relative"
+            <TouchableOpacity
+              key={photo.uri + index}
+              onPress={() => handleEditPhoto(index)}
+              className="mb-3 mr-3 items-center"
             >
               <Image
                 source={{ uri: photo.uri }}
                 className="w-24 h-24 rounded-lg"
                 style={{ resizeMode: "cover" }}
               />
-              
-              <TouchableOpacity
-                onPress={() => handleDeletePhoto(photo.uri)}
-                className="absolute top-1 right-1 bg-black/60 rounded-full w-6 h-6 items-center justify-center"
-              >
-                <Text className="text-white text-xs font-bold">✕</Text>
-              </TouchableOpacity>
-
-              <Input
-                placeholder="Label (e.g., Living Room)"
-                value={photo.label}
-                onChangeText={(text) => handlePhotoLabelChange(photo.uri, text)}
-                className="mt-2 w-24 text-xs"
-                style={{ fontSize: 12 }}
-              />
-            </View>
+              <Text className="mt-1 text-xs text-center max-w-[96px]">{photo.label}</Text>
+            </TouchableOpacity>
           ))}
         </View>
       )}
     </View>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBox: {
+    width: MODAL_SIZE,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  square: {
+    width: SQUARE_SIZE,
+    height: SQUARE_SIZE,
+    borderRadius: 12,
+    backgroundColor: '#f3f3f3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  squareImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    resizeMode: 'cover',
+  },
+}); 
