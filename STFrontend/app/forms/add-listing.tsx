@@ -26,10 +26,11 @@ export default function AddListingScreen() {
           ? Number(formData.building_type_id)
           : undefined,
         amenities: formData.amenities,
-        photos: formData.photos.map((label: string) => ({
-          url: label,
-          label,
-        })),
+        // photos: formData.photos.map((label: string) => ({
+        //   url: label,
+        //   label,
+        // })),
+        photos: formData.photos,
         start_date: formData.start_date,
         end_date: formData.end_date,
         target_gender: formData.target_gender,
@@ -56,6 +57,7 @@ export default function AddListingScreen() {
       } else {
         setMessage(e.message || "Error creating listing");
       }
+      throw e;
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 import { CLOUDINARY_CONFIG, IMAGE_UPLOAD_CONFIG } from './config';
+import { apiPost } from './api';
 
 export interface PhotoData {
   uri: string;
@@ -76,3 +77,20 @@ export const extractCloudinaryPublicId = (url: string): string | null => {
   const match = url.match(/\/upload\/(?:v\d+\/)?([^\.]+)\./);
   return match ? match[1] : null;
 }; 
+
+export const deletePhotosFromCloudinary = async (photos: UploadedPhoto[]) => {
+  const publicIds = photos
+    .map((photo) => extractCloudinaryPublicId(photo.url))
+    .filter(Boolean);
+
+  console.log("Attempting to delete these public IDs:", publicIds);
+  
+  if (publicIds.length === 0) return;
+
+  try {
+    const data = await apiPost('/photos/delete', { public_ids: publicIds });
+    console.log("Deletion response:", data);
+  } catch (err) {
+    console.warn("Failed to delete photos from Cloudinary:", err);
+  }
+};

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from contextlib import asynccontextmanager
 from db import init_db, close_db, get_pool
-from routes import listings, hello, renters, auth, users, locations, swipes, mutualmatches
+from routes import listings, hello, renters, auth, users, locations, swipes, mutualmatches, photos
 from typing import List
 from pydantic import BaseModel
 
@@ -35,6 +35,7 @@ app.include_router(users.router)
 app.include_router(locations.router)
 app.include_router(swipes.router)
 app.include_router(mutualmatches.router)
+app.include_router(photos.router)
 
 from fastapi.middleware.cors import CORSMiddleware
 

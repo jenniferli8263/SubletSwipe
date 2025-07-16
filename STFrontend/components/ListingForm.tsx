@@ -10,7 +10,7 @@ import MultiSelect from "@/components/ui/MultiSelect";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import PhotoUploader from "@/components/ui/PhotoUploader";
-import { PhotoData, uploadPhotosToCloudinary } from "@/lib/imageUtils";
+import { PhotoData, UploadedPhoto, uploadPhotosToCloudinary, deletePhotosFromCloudinary } from "@/lib/imageUtils";
 
 export interface ListingFormData {
   user_id: number;
@@ -25,7 +25,7 @@ export interface ListingFormData {
   description: string;
   building_type_id: string;
   amenities: number[];
-  photos: PhotoData[];
+  photos: PhotoData[]; // Only PhotoData in form state
   raw_address: string;
 }
 
@@ -157,11 +157,21 @@ export default function ListingForm({
       return;
     }
 
-    // Upload photos to Cloudinary
-    const uploadedPhotos = await uploadPhotosToCloudinary(form.photos);
-
-    setErrors({});
-    await onSubmit(form);
+    let uploadedPhotos: UploadedPhoto[] = [];
+    try {
+      uploadedPhotos = await uploadPhotosToCloudinary(form.photos);
+  
+      setErrors({});
+      await onSubmit({ ...form, photos: uploadedPhotos as any });
+  
+    }
+    catch (error) {
+      // console.error("Submit failed, cleaning up uploaded photos…", error); 
+      console.log("uploadedPhotos in catch:", uploadedPhotos);
+      await deletePhotosFromCloudinary(uploadedPhotos); 
+      setForm((prev) => ({ ...prev, photos: [] })); // <-- Clear photos
+      setErrors({ form: "Failed to create listing. Photos have been deleted." });
+    }
     // try {
     //   const payload = {
     //     ...form,
