@@ -59,3 +59,19 @@ async def get_user(user_id: int):
             "last_name": row["last_name"],
             "profile_photo": row["profile_photo"]
         }
+
+@router.get("/users/{user_id}/renter_profile", status_code=status.HTTP_200_OK)
+async def get_renter_profile_id(user_id: int):
+    query = """
+        SELECT id
+        FROM renter_profiles
+        WHERE user_id = $1
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        row = await connection.fetchrow(query, user_id)
+        if not row:
+            raise HTTPException(status_code=404, detail=f"No renter profile found for user {user_id}")
+        return {"renter_profile_id": row["id"]}
+
