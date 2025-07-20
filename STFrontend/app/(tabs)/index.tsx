@@ -16,28 +16,45 @@ export default function TabsHome() {
   const swiperRef = useRef<any>(null);
   const { user, signOut } = useAuth();
 
-  useEffect(() => {
-    const url = `/${isRenter ? "renters" : "listings"}/${resourceId}/${
-      isRenter ? "listing_matches" : "renter_matches"
-    }`;
-    console.log(url);
-    const fetchMatches = async () => {
-      if (!user) return;
+  const fetchMatches = useCallback(async () => {
+    if (!user) return;
 
-      setLoading(true);
-      setError("");
-      try {
-        const data = await apiGet(url);
-        console.log(data);
-        setMatches(data.matches || []);
-      } catch (e: any) {
-        setError(e.message || "Error fetching matches");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMatches();
+    setLoading(true);
+    setError("");
+    try {
+      const url = `/${isRenter ? "renters" : "listings"}/${resourceId}/${
+        isRenter ? "listing_matches" : "renter_matches"
+      }`;
+      console.log(url);
+      const data = await apiGet(url);
+      console.log(data);
+      setMatches(data.matches || []);
+    } catch (e: any) {
+      setError(e.message || "Error fetching matches");
+    } finally {
+      setLoading(false);
+    }
   }, [user, isRenter, resourceId]);
+
+  const fetchRecommendations = useCallback(async () => {
+    if (!isRenter || !resourceId) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      const data = await apiGet(`/listings/recommendations/${resourceId}`);
+      console.log("Recommendations:", data);
+      setMatches(data.recommendations || []);
+    } catch (e: any) {
+      setError(e.message || "Error fetching recommendations");
+    } finally {
+      setLoading(false);
+    }
+  }, [isRenter, resourceId]);
+
+  useEffect(() => {
+    fetchMatches();
+  }, [fetchMatches]);
 
   return (
     <View className="flex-1 bg-white">
@@ -57,6 +74,8 @@ export default function TabsHome() {
         error={error}
         swiperRef={swiperRef}
         isRenter={isRenter}
+        onFetchRecommendations={isRenter ? fetchRecommendations : undefined}
+        resourceId={resourceId}
       />
     </View>
   );
