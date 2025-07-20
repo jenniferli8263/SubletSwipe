@@ -95,7 +95,7 @@ export default function HomePageSwiper({
   if (!matches.length) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <Text>No matches found.</Text>
+        <Text className="text-2xl font-bold text-gray-400 text-center mb-6">No matches found.</Text>
       </View>
     );
   }
@@ -114,8 +114,8 @@ export default function HomePageSwiper({
               <Button
                 onPress={handleGetRecommendations}
                 disabled={recommendationsLoading}
-                className="bg-green-500 px-6 py-3 rounded-full"
-                activeOpacity={0.8}
+                // className="bg-green-500 px-6 py-3 rounded-full"
+                // activeOpacity={0.8}
               >
                 {recommendationsLoading
                   ? "Loading..."
