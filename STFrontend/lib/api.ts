@@ -1,4 +1,4 @@
-const BASE_URL = 'https://e9961c7ab141.ngrok-free.app'; // Change to your backend URL if needed
+const BASE_URL = 'https://parrot-superb-incredibly.ngrok-free.app'; // Change to your backend URL if needed
 
 export async function apiGet(path: string) {
   const res = await fetch(`${BASE_URL}${path}`, {

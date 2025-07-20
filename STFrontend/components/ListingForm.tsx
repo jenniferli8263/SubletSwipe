@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { apiGet, apiPost } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -7,7 +9,8 @@ import Checkbox from "@/components/ui/Checkbox";
 import MultiSelect from "@/components/ui/MultiSelect";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import DateRangePicker from "@/components/ui/DateRangePicker";
-import { apiGet } from "@/lib/api";
+import PhotoUploader from "@/components/ui/PhotoUploader";
+import { PhotoData, UploadedPhoto, uploadPhotosToCloudinary, deletePhotosFromCloudinary } from "@/lib/imageUtils";
 
 export interface ListingFormData {
   user_id: number;
@@ -22,7 +25,7 @@ export interface ListingFormData {
   description: string;
   building_type_id: string;
   amenities: number[];
-  photos: string[];
+  photos: PhotoData[]; // Only PhotoData in form state
   raw_address: string;
 }
 
@@ -98,14 +101,18 @@ export default function ListingForm({
     }));
   };
 
-  const handleTogglePhoto = (name: string) => {
-    setForm((prev) => ({
-      ...prev,
-      photos: prev.photos.includes(name)
-        ? prev.photos.filter((p) => p !== name)
-        : [...prev.photos, name],
-    }));
+  const handlePhotosChange = (photos: PhotoData[]) => {
+    setForm((prev) => ({ ...prev, photos }));
   };
+
+  // const handleTogglePhoto = (name: string) => {
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     photos: prev.photos.includes(name)
+  //       ? prev.photos.filter((p) => p !== name)
+  //       : [...prev.photos, name],
+  //   }));
+  // };
 
   const handleLocalSubmit = async () => {
     const newErrors: { [key: string]: string } = {};
@@ -150,12 +157,47 @@ export default function ListingForm({
       return;
     }
 
-    setErrors({});
-    await onSubmit(form);
-  };
-
-  const handleAddPhoto = () => {
-    alert("Add Photo button pressed!");
+    let uploadedPhotos: UploadedPhoto[] = [];
+    try {
+      uploadedPhotos = await uploadPhotosToCloudinary(form.photos);
+  
+      setErrors({});
+      await onSubmit({ ...form, photos: uploadedPhotos as any });
+  
+    }
+    catch (error) {
+      // console.error("Submit failed, cleaning up uploaded photos…", error); 
+      console.log("uploadedPhotos in catch:", uploadedPhotos);
+      await deletePhotosFromCloudinary(uploadedPhotos); 
+      setForm((prev) => ({ ...prev, photos: [] })); // <-- Clear photos
+      setErrors({ form: "Failed to create listing. Photos have been deleted." });
+    }
+    // try {
+    //   const payload = {
+    //     ...form,
+    //     user_id: Number(form.user_id),
+    //     asking_price: Number(form.asking_price),
+    //     num_bedrooms: Number(form.num_bedrooms),
+    //     num_bathrooms: Number(form.num_bathrooms),
+    //     building_type_id: form.building_type_id
+    //       ? Number(form.building_type_id)
+    //       : undefined,
+    //     amenities: form.amenities,
+    //     photos: uploadedPhotos,
+    //     start_date: form.start_date,
+    //     end_date: form.end_date,
+    //     target_gender: form.target_gender || "prefer not to say",
+    //     pet_friendly: Boolean(form.pet_friendly),
+    //     utilities_incl: Boolean(form.utilities_incl),
+    //     description: form.description,
+    //   };
+    //   await apiPost("/listings", payload);
+    //   setMessage("Listing created!");
+    // } catch (e: any) {
+    //   setMessage(e.message || "Error creating listing");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   return (
@@ -295,23 +337,14 @@ export default function ListingForm({
             numberOfLines={3}
           />
         </View>
-        <Text className="mb-1">Photos</Text>
-        <Button onPress={handleAddPhoto} className="mb-2">
-          Add Photo
-        </Button>
-        {/* <View className="flex-row flex-wrap mb-4">
-          {form.photos.map((name) => (
-            <TouchableOpacity
-              key={name}
-              onPress={() => handleTogglePhoto(name)}
-              className="bg-green-700 px-3 py-1 rounded-full mr-2 mb-2"
-            >
-              <Text className="text-white text-sm">{name} ✕</Text>
-            </TouchableOpacity>
-          ))}
-        </View> */}
+        <PhotoUploader
+          photos={form.photos}
+          onPhotosChange={handlePhotosChange}
+          maxPhotos={20}
+          className="mb-4"
+        />
         <Button onPress={handleLocalSubmit} disabled={loading}>
-          {loading ? "Submitting..." : submitLabel}
+          {loading ? "Submitting..." : "Create Listing"}
         </Button>
         {!!message && (
           <Text className="mt-4 text-center text-green-700 font-bold">
