@@ -1,10 +1,14 @@
 from fastapi import APIRouter, HTTPException, status
 from models import Photo, ListingCreate, ListingUpdate
 from asyncpg import CheckViolationError, PostgresError
-from utils.location_helper import resolve_address_from_google, insert_location_if_not_exists
+from utils.location_helper import (
+    resolve_address_from_google,
+    insert_location_if_not_exists,
+)
 from db import get_pool
 
 router = APIRouter()
+
 
 async def insert_listing_amenities(connection, listing_id: int, amenities: list[int]):
     if not amenities:
@@ -14,10 +18,14 @@ async def insert_listing_amenities(connection, listing_id: int, amenities: list[
 
     # We can also make bulk insert for this
     # The assumption though is that there won't be thousands of amenities. Leave this for now
-    await connection.executemany("""
+    await connection.executemany(
+        """
         INSERT INTO listing_amenities (listing_id, amenity_id)
         VALUES ($1, $2)
-    """, rows)
+    """,
+        rows,
+    )
+
 
 async def insert_listing_photos_bulk(connection, listing_id: int, photos: list[Photo]):
     if not photos:
@@ -38,6 +46,7 @@ async def insert_listing_photos_bulk(connection, listing_id: int, photos: list[P
 
     await connection.execute(insert_query, *args)
 
+
 async def insert_listing(listing: ListingCreate) -> int:
     query = """
         INSERT INTO listings (
@@ -52,7 +61,8 @@ async def insert_listing(listing: ListingCreate) -> int:
     pool = await get_pool()
     async with pool.acquire() as connection:
         async with connection.transaction():
-            row = await connection.fetchrow(query,
+            row = await connection.fetchrow(
+                query,
                 listing.user_id,
                 listing.is_active,
                 listing.locations_id,
@@ -65,7 +75,7 @@ async def insert_listing(listing: ListingCreate) -> int:
                 listing.num_bathrooms,
                 listing.pet_friendly,
                 listing.utilities_incl,
-                listing.description
+                listing.description,
             )
             if not row:
                 raise RuntimeError("Insert succeeded but no ID returned.")
@@ -103,7 +113,7 @@ async def create_listing(listing: ListingCreate):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error creating listing: {str(e)}"
+            detail=f"Error creating listing: {str(e)}",
         )
 
 
@@ -164,6 +174,7 @@ async def get_listing(listing_id: int):
             raise HTTPException(status_code=404, detail="Listing not found")
         return dict(row)
 
+
 @router.put("/listings/{listing_id}/deactivate/{user_id}")
 async def deactivate_listing(listing_id: int, user_id: int):
     query = """
@@ -177,28 +188,69 @@ async def deactivate_listing(listing_id: int, user_id: int):
     async with pool.acquire() as connection:
         row = await connection.fetchrow(query, listing_id, user_id)
         if not row:
-            raise HTTPException(status_code=404, detail="Listing not found or user not authorized")
+            raise HTTPException(
+                status_code=404, detail="Listing not found or user not authorized"
+            )
         return dict(row)
+
 
 @router.patch("/listings/{listing_id}")
 async def partial_update_listing(listing_id: int, listing: ListingUpdate):
     pool = await get_pool()
     async with pool.acquire() as connection:
         async with connection.transaction():
-            existing = await connection.fetchrow("SELECT * FROM listings WHERE id = $1", listing_id)
+            existing = await connection.fetchrow(
+                "SELECT * FROM listings WHERE id = $1", listing_id
+            )
             if not existing:
                 raise HTTPException(status_code=404, detail="Listing not found")
 
             updated_values = {
-                "start_date": listing.start_date if listing.start_date is not None else existing["start_date"],
-                "end_date": listing.end_date if listing.end_date is not None else existing["end_date"],
-                "target_gender": listing.target_gender.value if listing.target_gender is not None else existing["target_gender"],
-                "asking_price": listing.asking_price if listing.asking_price is not None else existing["asking_price"],
-                "num_bedrooms": listing.num_bedrooms if listing.num_bedrooms is not None else existing["num_bedrooms"],
-                "num_bathrooms": listing.num_bathrooms if listing.num_bathrooms is not None else existing["num_bathrooms"],
-                "pet_friendly": listing.pet_friendly if listing.pet_friendly is not None else existing["pet_friendly"],
-                "utilities_incl": listing.utilities_incl if listing.utilities_incl is not None else existing["utilities_incl"],
-                "description": listing.description if listing.description is not None else existing["description"],
+                "start_date": (
+                    listing.start_date
+                    if listing.start_date is not None
+                    else existing["start_date"]
+                ),
+                "end_date": (
+                    listing.end_date
+                    if listing.end_date is not None
+                    else existing["end_date"]
+                ),
+                "target_gender": (
+                    listing.target_gender.value
+                    if listing.target_gender is not None
+                    else existing["target_gender"]
+                ),
+                "asking_price": (
+                    listing.asking_price
+                    if listing.asking_price is not None
+                    else existing["asking_price"]
+                ),
+                "num_bedrooms": (
+                    listing.num_bedrooms
+                    if listing.num_bedrooms is not None
+                    else existing["num_bedrooms"]
+                ),
+                "num_bathrooms": (
+                    listing.num_bathrooms
+                    if listing.num_bathrooms is not None
+                    else existing["num_bathrooms"]
+                ),
+                "pet_friendly": (
+                    listing.pet_friendly
+                    if listing.pet_friendly is not None
+                    else existing["pet_friendly"]
+                ),
+                "utilities_incl": (
+                    listing.utilities_incl
+                    if listing.utilities_incl is not None
+                    else existing["utilities_incl"]
+                ),
+                "description": (
+                    listing.description
+                    if listing.description is not None
+                    else existing["description"]
+                ),
             }
 
             update_query = """
@@ -216,26 +268,35 @@ async def partial_update_listing(listing_id: int, listing: ListingUpdate):
             """
 
             try:
-                await connection.execute(update_query, *updated_values.values(), listing_id)
+                await connection.execute(
+                    update_query, *updated_values.values(), listing_id
+                )
 
                 if listing.amenities is not None:
-                    await connection.execute("DELETE FROM listing_amenities WHERE listing_id = $1", listing_id)
-                    await insert_listing_amenities(connection, listing_id, listing.amenities)
+                    await connection.execute(
+                        "DELETE FROM listing_amenities WHERE listing_id = $1",
+                        listing_id,
+                    )
+                    await insert_listing_amenities(
+                        connection, listing_id, listing.amenities
+                    )
 
                 if listing.photos_to_delete:
                     await connection.execute(
                         "DELETE FROM photos WHERE listing_id = $1 AND url = ANY($2::text[])",
                         listing_id,
-                        listing.photos_to_delete
+                        listing.photos_to_delete,
                     )
 
                 if listing.photos_to_add:
-                    await insert_listing_photos_bulk(connection, listing_id, listing.photos_to_add)
+                    await insert_listing_photos_bulk(
+                        connection, listing_id, listing.photos_to_add
+                    )
 
             except Exception as e:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Error updating listing: {str(e)}"
+                    detail=f"Error updating listing: {str(e)}",
                 )
 
     return {"message": "Listing updated successfully"}
@@ -291,9 +352,129 @@ ORDER BY score DESC;
     async with pool.acquire() as connection:
         rows = await connection.fetch(query, listing_id)
         if not rows:
-            return {"matches": [], "message": "No renter matches found for this listing"}
+            return {
+                "matches": [],
+                "message": "No renter matches found for this listing",
+            }
         matches = [dict(row) for row in rows]
         return {"matches": matches, "count": len(matches)}
 
 
+@router.get("/listings/recommendations/{current_renter_id}")
+async def get_collaborative_recommendations(current_renter_id: int):
+    """
+    Get collaborative filtering recommendations for a renter based on similar renters' preferences.
+    This route finds listings that similar renters (those who liked the same listings) have also liked.
+    """
+    query = """
+    WITH
+      -- Listings the current renter has liked (swiped right on)
+      current_likes AS (
+        SELECT listing_id
+        FROM renter_on_listing
+        WHERE renter_profile_id = $1
+          AND is_right = TRUE
+      ),
 
+      --  Other renters who share at least 1 liked listing with the current renter
+      similar_renters AS (
+        SELECT
+          rol2.renter_profile_id,
+          COUNT(*) AS common_likes
+        FROM renter_on_listing AS rol1
+        JOIN renter_on_listing AS rol2
+          ON rol1.listing_id = rol2.listing_id
+          AND rol2.is_right = TRUE
+        WHERE rol1.renter_profile_id = $1
+          AND rol1.is_right = TRUE
+          AND rol2.renter_profile_id != $1
+        GROUP BY rol2.renter_profile_id
+        HAVING COUNT(*) >= 1
+      ),
+
+      -- Score unseen listings by how many similar renters liked them
+      scored_recs AS (
+        SELECT
+          rol.listing_id,
+          COUNT(*) AS score
+        FROM similar_renters AS sr
+        JOIN renter_on_listing AS rol
+          ON rol.renter_profile_id = sr.renter_profile_id
+          AND rol.is_right = TRUE
+        WHERE rol.listing_id NOT IN (SELECT listing_id FROM current_likes)
+        GROUP BY rol.listing_id
+      )
+
+    -- Return top recommendations with listing details
+    SELECT
+      l.id,
+      l.user_id,
+      u.first_name,
+      u.last_name,
+      u.email,
+      u.profile_photo,
+      l.locations_id,
+      l.is_active,
+      l.start_date,
+      l.end_date,
+      l.target_gender,
+      l.asking_price,
+      l.num_bedrooms,
+      l.num_bathrooms,
+      l.pet_friendly,
+      l.utilities_incl,
+      l.description,
+      loc.address_string,
+      loc.latitude,
+      loc.longitude,
+      bt.id AS building_type_id,
+      bt.type AS building_type,
+      COALESCE(
+        (SELECT json_agg(json_build_object('url', p.url, 'label', p.label))
+        FROM photos p
+        WHERE p.listing_id = l.id), '[]'
+      ) AS photos,
+      COALESCE(
+        (SELECT json_agg(a.name)
+        FROM listing_amenities la
+        JOIN amenities a ON la.amenity_id = a.id
+        WHERE la.listing_id = l.id), '[]'
+      ) AS amenities,
+      COALESCE(
+        (SELECT json_agg(a.id)
+        FROM listing_amenities la
+        JOIN amenities a ON la.amenity_id = a.id
+        WHERE la.listing_id = l.id), '[]'
+      ) AS amenity_ids,
+      sr.score
+    FROM scored_recs AS sr
+    JOIN listings AS l ON l.id = sr.listing_id
+    JOIN users u ON l.user_id = u.id
+    JOIN locations loc ON l.locations_id = loc.id
+    LEFT JOIN building_types bt ON l.building_type_id = bt.id
+    WHERE l.is_active = TRUE
+    ORDER BY sr.score DESC, l.start_date ASC
+    LIMIT 10;
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        try:
+            rows = await connection.fetch(query, current_renter_id)
+            if not rows:
+                return {
+                    "recommendations": [],
+                    "message": "No recommendations found. Try swiping on more listings to get personalized recommendations.",
+                }
+
+            recommendations = [dict(row) for row in rows]
+            return {
+                "recommendations": recommendations,
+                "count": len(recommendations),
+                "message": f"Found {len(recommendations)} personalized recommendations",
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error getting recommendations: {str(e)}",
+            )

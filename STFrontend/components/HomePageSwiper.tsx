@@ -13,6 +13,7 @@ import LoadingIndicator from "./ui/LoadingIndicator";
 import { useRouter } from "expo-router";
 import ListingCardContent from "./ListingCardContent";
 import RenterCardContent from "./RenterCardContent";
+import Button from "./ui/Button";
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
@@ -41,6 +42,8 @@ interface HomePageSwiperProps {
   error: string;
   swiperRef: React.RefObject<any>;
   isRenter: boolean;
+  onFetchRecommendations?: () => Promise<void>;
+  resourceId?: number;
 }
 
 export default function HomePageSwiper({
@@ -49,9 +52,13 @@ export default function HomePageSwiper({
   error,
   swiperRef,
   isRenter,
+  onFetchRecommendations,
+  resourceId,
 }: HomePageSwiperProps) {
   const [showOutOfMatches, setShowOutOfMatches] = useState(false);
   const [availableHeight, setAvailableHeight] = useState<number | null>(null);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [hasShownRecommendations, setHasShownRecommendations] = useState(false);
   const bottomBarHeight = useBottomTabBarHeight();
 
   const handleSwipeLeft = (i: number) => {
@@ -62,7 +69,22 @@ export default function HomePageSwiper({
     console.log("swiped right on ", matches[i]);
   };
 
-  if (loading) {
+  const handleGetRecommendations = async () => {
+    if (!onFetchRecommendations) return;
+
+    setRecommendationsLoading(true);
+    try {
+      await onFetchRecommendations();
+      setShowOutOfMatches(false);
+      setHasShownRecommendations(true);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  };
+
+  if (loading || recommendationsLoading) {
     return <LoadingIndicator />;
   }
   if (error) {
@@ -75,7 +97,9 @@ export default function HomePageSwiper({
   if (!matches.length) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <Text>No matches found.</Text>
+        <Text className="text-2xl font-bold text-gray-400 text-center mb-6">
+          No matches found.
+        </Text>
       </View>
     );
   }
@@ -83,13 +107,26 @@ export default function HomePageSwiper({
   return (
     <View className="flex-1 justify-center items-center bg-white">
       {showOutOfMatches && (
-        <View
-          pointerEvents="none"
-          className="absolute inset-0 justify-center items-center z-0"
-        >
-          <Text className="text-2xl font-bold text-gray-400 text-center">
-            Out of {isRenter ? "listings" : "renters"} :(
-          </Text>
+        <View className="absolute inset-0 justify-center items-center z-10 bg-white">
+          <View className="items-center px-8">
+            <Text className="text-2xl font-bold text-gray-400 text-center mb-6">
+              Out of {isRenter ? "listings" : "renters"} :(
+            </Text>
+
+            {/* Show recommendation button only for renters who haven't seen recommendations yet */}
+            {isRenter && onFetchRecommendations && !hasShownRecommendations && (
+              <Button
+                onPress={handleGetRecommendations}
+                disabled={recommendationsLoading}
+                // className="bg-green-500 px-6 py-3 rounded-full"
+                // activeOpacity={0.8}
+              >
+                {recommendationsLoading
+                  ? "Loading..."
+                  : "See what others are swiping on"}
+              </Button>
+            )}
+          </View>
         </View>
       )}
       <View
