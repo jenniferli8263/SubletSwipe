@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiPost } from "@/lib/api";
 import Input from "@/components/ui/Input";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 interface LoginData {
   email: string;
@@ -22,6 +23,7 @@ interface LoginData {
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -122,19 +124,31 @@ export default function LoginScreen() {
 
               <View className="mb-6">
                 <Text className="text-gray-700 font-medium mb-2">Password</Text>
-                <Input
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900"
-                  placeholder="Enter your password"
-                  placeholderTextColor="#9CA3AF"
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (errors.password)
-                      setErrors((e) => ({ ...e, password: "" }));
-                  }}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
+                <View className="relative">
+                  <Input
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 pr-12 text-gray-900"
+                    placeholder="Enter your password"
+                    placeholderTextColor="#9CA3AF"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errors.password)
+                        setErrors((e) => ({ ...e, password: "" }));
+                    }}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-0 bottom-0 justify-center"
+                  >
+                    <MaterialIcons
+                      name={showPassword ? "visibility" : "visibility-off"}
+                      size={24}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
                 {errors.password ? (
                   <Text className="text-red-600 mb-2">{errors.password}</Text>
                 ) : null}

@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiPost } from "@/lib/api";
 import Input from "@/components/ui/Input";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 interface SignupData {
   id: number;
@@ -28,6 +29,8 @@ export default function SignupScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -188,18 +191,30 @@ export default function SignupScreen() {
 
               <View className="mb-4">
                 <Text className="text-gray-700 font-medium mb-2">Password</Text>
-                <Input
-                  className="mb-4"
-                  placeholder="Create a password"
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (errors.password)
-                      setErrors((e) => ({ ...e, password: "" }));
-                  }}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
+                <View className="relative">
+                  <Input
+                    className="mb-4 pr-12"
+                    placeholder="Create a password"
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      if (errors.password)
+                        setErrors((e) => ({ ...e, password: "" }));
+                    }}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-0 bottom-0 justify-center"
+                  >
+                    <MaterialIcons
+                      name={showPassword ? "visibility" : "visibility-off"}
+                      size={24}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
                 {errors.password ? (
                   <Text className="text-red-600 mb-2">{errors.password}</Text>
                 ) : null}
@@ -209,18 +224,32 @@ export default function SignupScreen() {
                 <Text className="text-gray-700 font-medium mb-2">
                   Confirm Password
                 </Text>
-                <Input
-                  className="mb-4"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChangeText={(text) => {
-                    setConfirmPassword(text);
-                    if (errors.confirmPassword)
-                      setErrors((e) => ({ ...e, confirmPassword: "" }));
-                  }}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
+                <View className="relative">
+                  <Input
+                    className="mb-4 pr-12"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errors.confirmPassword)
+                        setErrors((e) => ({ ...e, confirmPassword: "" }));
+                    }}
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-0 bottom-0 justify-center"
+                  >
+                    <MaterialIcons
+                      name={
+                        showConfirmPassword ? "visibility" : "visibility-off"
+                      }
+                      size={24}
+                      color="#6B7280"
+                    />
+                  </TouchableOpacity>
+                </View>
                 {errors.confirmPassword ? (
                   <Text className="text-red-600 mb-2">
                     {errors.confirmPassword}
