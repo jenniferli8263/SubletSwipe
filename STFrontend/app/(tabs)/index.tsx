@@ -6,7 +6,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 
 import { useActiveRole } from "../../components/ActiveRoleContext";
 import HomePageSwiper from "../../components/HomePageSwiper";
-import { View, TouchableOpacity, Text } from "react-native";
+import { View } from "react-native";
 
 export default function TabsHome() {
   const { isRenter, resourceId } = useActiveRole();
@@ -14,7 +14,7 @@ export default function TabsHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const swiperRef = useRef<any>(null);
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   const fetchMatches = useCallback(async () => {
     if (!user) return;
@@ -58,16 +58,6 @@ export default function TabsHome() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Header with Logout Button */}
-      <View className="flex-row justify-end items-center px-4 pt-4 pb-2">
-        <TouchableOpacity
-          onPress={signOut}
-          className="p-2 rounded-full bg-gray-100"
-          accessibilityLabel="Logout"
-        >
-          <MaterialIcons name="logout" size={24} color="#166534" />
-        </TouchableOpacity>
-      </View>
       <HomePageSwiper
         matches={matches}
         loading={loading}

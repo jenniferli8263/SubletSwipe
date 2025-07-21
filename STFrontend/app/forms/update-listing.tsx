@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, Text, TouchableOpacity } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
 import ListingForm, { ListingFormData } from "@/components/ListingForm";
 import { apiGet, apiPatch } from "@/lib/api";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function UpdateListingScreen() {
   const { listingId } = useLocalSearchParams();
@@ -101,10 +102,18 @@ export default function UpdateListingScreen() {
     }
   };
 
-  if (!initialValues) return null;
+  if (!initialValues)
+    return (
+      <View className="bg-white flex-1">
+        <Text>Error Loading Form</Text>
+      </View>
+    );
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
+      <TouchableOpacity onPress={() => router.back()} className="p-2 mx-2">
+        <MaterialIcons name="arrow-back" size={24} color="#166534" />
+      </TouchableOpacity>
       <ListingForm
         type="update"
         initialValues={initialValues}

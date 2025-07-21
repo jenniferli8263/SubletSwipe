@@ -44,6 +44,10 @@ function AppContent() {
               options={{ headerShown: false }}
             />
             <Stack.Screen name="forms" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="user-details"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />

@@ -14,6 +14,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { apiPost, apiGet } from "@/lib/api";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function RenterProfileSubletScreen() {
   const router = useRouter();
@@ -147,10 +148,6 @@ export default function RenterProfileSubletScreen() {
     }
   };
 
-  const goBack = () => {
-    router.back();
-  };
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View className="flex-1 bg-white">
@@ -159,8 +156,11 @@ export default function RenterProfileSubletScreen() {
           contentContainerStyle={{ paddingBottom: 120 }}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity onPress={goBack} className="mb-4">
-            <Text className="text-green-800 text-lg">← Back</Text>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mb-4 p-2 mr-2"
+          >
+            <MaterialIcons name="arrow-back" size={24} color="#166534" />
           </TouchableOpacity>
           <Text className="text-4xl font-bold mb-6">Sublet Info</Text>
           <View className="py-2">

@@ -7,18 +7,6 @@ export default function AuthLayout() {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (
-      user &&
-      // LITERALLY TWEAKING WHY IS IT THAT AFTER ROUTER PUSHES TO QUESTIONNAIRE, THE PATH IS STILL SIGNUP?!
-      !["/auth/questionnaire", "/auth/RenterForm", "/auth/signup"].includes(
-        pathname
-      )
-    ) {
-      router.replace("/(tabs)");
-    }
-  }, [user, pathname]);
-
   return (
     <Stack>
       <Stack.Screen name="welcome" options={{ headerShown: false }} />

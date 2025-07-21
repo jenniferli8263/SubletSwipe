@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchRenterProfileId, fetchListingIds } from "@/lib/api";
+import { fetchRenterProfileId, fetchListingIds } from "@/lib/api";
 
 interface ActiveRoleContextProps {
   isRenter: boolean;
@@ -92,10 +93,12 @@ export const ActiveRoleProvider = ({ children }: { children: ReactNode }) => {
       setHasAutoDetected(true);
     };
 
+  useEffect(() => {
     fetchResources();
   }, [user, hasUserSetRole, hasAutoDetected]);
 
   const setResourceId = (id: number) => {
+    fetchResources();
     if (isRenter) {
       if (id === renterProfileId && id !== null) {
         setResourceIdState(id);

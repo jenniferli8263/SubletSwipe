@@ -72,6 +72,6 @@ async def get_renter_profile_id(user_id: int):
     async with pool.acquire() as connection:
         row = await connection.fetchrow(query, user_id)
         if not row:
-            raise HTTPException(status_code=404, detail=f"No renter profile found for user {user_id}")
+            return {"renter_profile_id": None}
         return {"renter_profile_id": row["id"]}
 

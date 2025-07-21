@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Modal, Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity, View, Modal, Text } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import ListingForm from "@/components/ListingForm";
 import { apiPost } from "@/lib/api";
@@ -68,9 +69,12 @@ export default function AddListingScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
+      <TouchableOpacity onPress={() => router.back()} className="p-2 mx-2">
+        <MaterialIcons name="arrow-back" size={24} color="#166534" />
+      </TouchableOpacity>
       <ListingForm
-        type = "add"
+        type="add"
         initialValues={{
           user_id: user?.id || 0,
           start_date: "",
@@ -100,9 +104,28 @@ export default function AddListingScreen() {
         animationType="fade"
         onRequestClose={() => setShowSuccessModal(false)}
       >
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.3)" }}>
-          <View style={{ backgroundColor: "white", padding: 32, borderRadius: 16, alignItems: "center", minWidth: 250 }}>
-            <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 16 }}>Listing created!</Text>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              minWidth: 250,
+            }}
+          >
+            <Text
+              style={{ fontSize: 20, fontWeight: "bold", marginBottom: 16 }}
+            >
+              Listing created!
+            </Text>
             <TouchableOpacity
               className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
               onPress={() => {
@@ -118,7 +141,6 @@ export default function AddListingScreen() {
     </View>
   );
 }
-
 
 //OLD CODE AS A REFERENCE
 

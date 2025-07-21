@@ -7,9 +7,9 @@ export default function Questionnaire() {
 
   const handleNext = () => {
     if (selected === "renter") {
-      router.replace("/forms/renter-profile-personal");
+      router.push("/forms/renter-profile-personal");
     } else if (selected === "landlord") {
-      router.replace("/forms/add-listing");
+      router.push("/forms/add-listing");
     }
   };
 
