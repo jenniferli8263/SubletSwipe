@@ -58,6 +58,7 @@ export default function HomePageSwiper({
   const [showOutOfMatches, setShowOutOfMatches] = useState(false);
   const [availableHeight, setAvailableHeight] = useState<number | null>(null);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [hasShownRecommendations, setHasShownRecommendations] = useState(false);
   const bottomBarHeight = useBottomTabBarHeight();
 
   const handleSwipeLeft = (i: number) => {
@@ -75,6 +76,7 @@ export default function HomePageSwiper({
     try {
       await onFetchRecommendations();
       setShowOutOfMatches(false);
+      setHasShownRecommendations(true);
     } catch (error) {
       console.error("Error fetching recommendations:", error);
     } finally {
@@ -95,7 +97,9 @@ export default function HomePageSwiper({
   if (!matches.length) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <Text className="text-2xl font-bold text-gray-400 text-center mb-6">No matches found.</Text>
+        <Text className="text-2xl font-bold text-gray-400 text-center mb-6">
+          No matches found.
+        </Text>
       </View>
     );
   }
@@ -109,8 +113,8 @@ export default function HomePageSwiper({
               Out of {isRenter ? "listings" : "renters"} :(
             </Text>
 
-            {/* Show recommendation button only for renters */}
-            {isRenter && onFetchRecommendations && (
+            {/* Show recommendation button only for renters who haven't seen recommendations yet */}
+            {isRenter && onFetchRecommendations && !hasShownRecommendations && (
               <Button
                 onPress={handleGetRecommendations}
                 disabled={recommendationsLoading}
