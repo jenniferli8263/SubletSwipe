@@ -106,7 +106,7 @@ function SectionCard({
   };
   const setActive = () => {
     console.log(isRenter, resourceInfo.id);
-    activeRole.setRole(isRenter, resourceInfo.id);
+    activeRole.setRole({ isRenter, resourceId: resourceInfo.id });
   };
 
   return (
@@ -142,6 +142,7 @@ function SectionCard({
         {/* Set Active button for listings only, if not already active */}
         <Pressable
           onPress={setActive}
+          disabled={isActiveRole || !resourceInfo?.is_active}
           className={
             "flex-1 justify-center items-center px-4 h-full m-0 " +
             (!isActiveRole ? "bg-green-800" : "bg-gray-400")
@@ -157,6 +158,7 @@ function SectionCard({
         </Pressable>
         <Pressable
           onPress={deactivate}
+          disabled={isActiveRole}
           className={
             "flex-1  justify-center items-center px-4 h-full m-0 " +
             (!isActiveRole && resourceInfo.is_active
