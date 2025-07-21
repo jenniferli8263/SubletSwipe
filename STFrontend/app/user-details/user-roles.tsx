@@ -73,17 +73,12 @@ function SectionCard({
   const { user } = useAuth();
   const router = useRouter();
   const activeRole = useActiveRole();
-  const { setIsRenter, setResourceId } = useActiveRole();
 
   // Determine if this card is the currently equipped role
   const isActiveRole =
     !!resourceInfo &&
-    ((isRenter &&
-      activeRole.isRenter &&
-      resourceInfo.id === activeRole.resourceId) ||
-      (!isRenter &&
-        !activeRole.isRenter &&
-        resourceInfo.id === activeRole.resourceId));
+    isRenter == activeRole.isRenter &&
+    resourceInfo.id === activeRole.resourceId;
 
   const update = async () => {
     if (isRenter) {
@@ -111,8 +106,7 @@ function SectionCard({
   };
   const setActive = () => {
     console.log(isRenter, resourceInfo.id);
-    setIsRenter(isRenter);
-    setResourceId(resourceInfo.id);
+    activeRole.setRole(isRenter, resourceInfo.id);
   };
 
   return (

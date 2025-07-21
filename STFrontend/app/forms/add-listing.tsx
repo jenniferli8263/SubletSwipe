@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import ListingForm from "@/components/ListingForm";
 import { apiPost } from "@/lib/api";
 import { useRouter } from "expo-router";
+import { useActiveRole } from "@/components/ActiveRoleContext";
 
 export default function AddListingScreen() {
   const { user } = useAuth();
@@ -13,6 +14,7 @@ export default function AddListingScreen() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const { setRole, fetchResources } = useActiveRole();
 
   const handleSubmit = async (formData: any): Promise<void> => {
     setLoading(true);
@@ -43,9 +45,13 @@ export default function AddListingScreen() {
         description: formData.description,
       };
 
-      await apiPost("/listings", payload);
+      const response = await apiPost("/listings", payload);
       setMessage("Listing created!");
       setShowSuccessModal(true);
+      if (response?.id) {
+        await fetchResources();
+        setRole({ isRenter: false, resourceId: response.id });
+      }
     } catch (e: any) {
       if (e.message && e.message.includes("chk_term_length")) {
         setErrors((prev) => ({

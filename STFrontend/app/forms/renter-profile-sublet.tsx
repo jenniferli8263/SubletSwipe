@@ -15,8 +15,11 @@ import DateRangePicker from "@/components/ui/DateRangePicker";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { apiPost, apiGet } from "@/lib/api";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useActiveRole } from "@/components/ActiveRoleContext";
 
 export default function RenterProfileSubletScreen() {
+  const { setRole, fetchResources } = useActiveRole();
+
   const router = useRouter();
   const params = useLocalSearchParams();
   const [form, setForm] = useState({
@@ -121,7 +124,11 @@ export default function RenterProfileSubletScreen() {
           ? Number(form.building_type_id)
           : undefined,
       };
-      await apiPost("/renters", payload);
+      const response = await apiPost("/renters", payload);
+      if (response?.id) {
+        await fetchResources();
+        setRole({ isRenter: true, resourceId: response.id });
+      }
       setMessage("Renter profile created!");
       // Navigate to index tab after successful submission
       setTimeout(() => {
