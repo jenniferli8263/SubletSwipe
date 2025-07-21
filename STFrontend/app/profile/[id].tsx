@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiGet } from "@/lib/api";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import ListingCardContent from "@/components/ListingCardContent";
+import * as Clipboard from "expo-clipboard";
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
@@ -62,7 +63,35 @@ export default function LandlordProfilePage() {
           (listing) => listing && listing.is_active
         );
 
-        setListings(validListings);
+        // Parse photos for each listing and add photo_url field
+        const processedListings = validListings.map((listing) => {
+          let photoUrl = null;
+          if (listing.photos) {
+            try {
+              const photos =
+                typeof listing.photos === "string"
+                  ? JSON.parse(listing.photos)
+                  : listing.photos;
+
+              if (Array.isArray(photos) && photos.length > 0) {
+                photoUrl = photos[0].url;
+              }
+            } catch (error) {
+              console.log(
+                "Error parsing photos for listing:",
+                listing.id,
+                error
+              );
+            }
+          }
+
+          return {
+            ...listing,
+            photo_url: photoUrl,
+          };
+        });
+
+        setListings(processedListings);
       } catch (e: any) {
         setError(e.message || "Error fetching landlord data");
       } finally {
@@ -98,15 +127,12 @@ export default function LandlordProfilePage() {
 
   const copyEmailToClipboard = async () => {
     try {
-      // For React Native, we'll use a simple approach
-      // In a real app, you'd install expo-clipboard or react-native-clipboard
+      await Clipboard.setStringAsync(landlord.email);
       Alert.alert(
         "Email Copied!",
         `${landlord.email} has been copied to clipboard.`,
         [{ text: "OK" }]
       );
-      // Note: In a production app, you'd use:
-      // await Clipboard.setStringAsync(landlord.email);
     } catch (error) {
       Alert.alert("Error", "Failed to copy email to clipboard.");
     }
