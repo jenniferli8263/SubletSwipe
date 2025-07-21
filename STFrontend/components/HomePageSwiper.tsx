@@ -198,16 +198,16 @@ function SwiperCard({
       {/* Buttons*/}
       <View className="flex-row justify-center w-full mt-2 mb-0">
         <TouchableOpacity
-          className="w-12 h-12 rounded-full bg-gray-100 justify-center items-center mx-4"
+          className="w-14 h-14 rounded-full bg-gray-100 justify-center items-center mx-4"
           onPress={() => swiperRef.current?.swipeLeft()}
         >
-          <MaterialIcons size={28} name="highlight-off" color="#505050" />
+          <MaterialIcons size={32} name="highlight-off" color="#505050" />
         </TouchableOpacity>
         <TouchableOpacity
-          className="w-12 h-12 rounded-full bg-gray-100 justify-center items-center mx-4"
+          className="w-14 h-14 rounded-full bg-gray-100 justify-center items-center mx-4"
           onPress={() => swiperRef.current?.swipeRight()}
         >
-          <MaterialIcons size={28} name="favorite-border" color="#505050" />
+          <MaterialIcons size={32} name="favorite-border" color="#505050" />
         </TouchableOpacity>
       </View>
     </View>
