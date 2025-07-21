@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, TextInput, Alert, Modal, Pressable, StyleSheet, Dimensions } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import { PhotoData } from "@/lib/imageUtils";
 import Button from "./Button";
 import Input from "./Input";
@@ -26,6 +27,7 @@ export default function PhotoUploader({
   const [currentPhoto, setCurrentPhoto] = useState<PhotoData | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>("");
 
   // Open modal for new photo
   const handleAddPhoto = () => {
@@ -93,7 +95,7 @@ export default function PhotoUploader({
   };
 
   // Upload (add or update) photo
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!currentPhoto || !currentPhoto.uri || !currentPhoto.base64) {
       Alert.alert("No photo selected", "Please select a photo to upload.");
       return;
@@ -102,11 +104,36 @@ export default function PhotoUploader({
       Alert.alert("Label required", "Please enter a label for the photo.");
       return;
     }
+    let photoToUpload = currentPhoto;
+    // Check if base64 is over 10MB (Cloudinary's free plan limit)
+    // 1 char base64 = 0.75 bytes, so 10MB = 10485760 bytes = 13981013 base64 chars
+    const MAX_BASE64_LENGTH = 13981013;
+    if (currentPhoto.base64.length > MAX_BASE64_LENGTH) {
+      try {
+        const manipResult = await ImageManipulator.manipulateAsync(
+          currentPhoto.uri,
+          [{ resize: { width: 1200, height: 1200 } }],
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+        );
+        photoToUpload = {
+          uri: manipResult.uri,
+          label: currentPhoto.label,
+          base64: manipResult.base64 || ""
+        };
+        if (photoToUpload.base64.length > MAX_BASE64_LENGTH) {
+          Alert.alert("Photo too large", "Could not compress photo under 10MB. Please choose a smaller image.");
+          return;
+        }
+      } catch (err) {
+        Alert.alert("Compression failed", "Could not compress photo. Please try a different image.");
+        return;
+      }
+    }
     let newPhotos = [...photos];
     if (editingIndex !== null) {
-      newPhotos[editingIndex] = currentPhoto;
+      newPhotos[editingIndex] = photoToUpload;
     } else {
-      newPhotos.push(currentPhoto);
+      newPhotos.push(photoToUpload);
     }
     onPhotosChange(newPhotos);
     setModalVisible(false);
@@ -124,6 +151,16 @@ export default function PhotoUploader({
     setModalVisible(false);
     setCurrentPhoto(null);
     setEditingIndex(null);
+    setUploadError(""); // Clear error on delete
+  };
+
+  // Clear error when modal is closed
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setCurrentPhoto(null);
+    setEditingIndex(null);
+    // Optionally clear error here if you want error to disappear on close:
+    // setUploadError("");
   };
 
   return (
@@ -141,13 +178,15 @@ export default function PhotoUploader({
       >
         {uploading ? "Selecting..." : "Add Photo"}
       </Button>
-
+      {uploadError ? (
+        <Text className="text-red-600 mb-2">{uploadError}</Text>
+      ) : null}
       {/* Modal Overlay for Add/Edit Photo */}
       <Modal
         visible={modalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={handleCloseModal}
       >
         <View style={styles.overlay}>
           <View style={styles.modalBox}>
@@ -182,32 +221,29 @@ export default function PhotoUploader({
                 Delete
               </Button>
             </View>
-            <Button onPress={() => setModalVisible(false)} className="mt-4">
+            <Button onPress={handleCloseModal} className="mt-4">
               Cancel
             </Button>
           </View>
         </View>
       </Modal>
-
       {/* Display uploaded photos */}
-      {photos.length > 0 && (
-        <View className="flex-row flex-wrap">
-          {photos.map((photo, index) => (
-            <TouchableOpacity
-              key={photo.uri + index}
-              onPress={() => handleEditPhoto(index)}
-              className="mb-3 mr-3 items-center"
-            >
-              <Image
-                source={{ uri: photo.uri }}
-                className="w-24 h-24 rounded-lg"
-                style={{ resizeMode: "cover" }}
-              />
-              <Text className="mt-1 text-xs text-center max-w-[96px]">{photo.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+      <View className="flex-row flex-wrap">
+        {photos.map((photo, index) => (
+          <TouchableOpacity
+            key={photo.uri + index}
+            onPress={() => handleEditPhoto(index)}
+            className="mb-3 mr-3 items-center"
+          >
+            <Image
+              source={{ uri: photo.uri }}
+              className="w-24 h-24 rounded-lg"
+              style={{ resizeMode: "cover" }}
+            />
+            <Text className="mt-1 text-xs text-center max-w-[96px]">{photo.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 }

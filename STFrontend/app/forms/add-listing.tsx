@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, Modal, Text, TouchableOpacity } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import ListingForm from "@/components/ListingForm";
 import { apiPost } from "@/lib/api";
+import { useRouter } from "expo-router";
 
 export default function AddListingScreen() {
   const { user } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleSubmit = async (formData: any): Promise<void> => {
     setLoading(true);
@@ -41,6 +44,7 @@ export default function AddListingScreen() {
 
       await apiPost("/listings", payload);
       setMessage("Listing created!");
+      setShowSuccessModal(true);
     } catch (e: any) {
       if (e.message && e.message.includes("chk_term_length")) {
         setErrors((prev) => ({
@@ -90,6 +94,27 @@ export default function AddListingScreen() {
         externalErrors={errors} // ← ✅ This is what's missing
         key={JSON.stringify(errors)} // optional: ensures fresh rerender
       />
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.3)" }}>
+          <View style={{ backgroundColor: "white", padding: 32, borderRadius: 16, alignItems: "center", minWidth: 250 }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 16 }}>Listing created!</Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace("/(tabs)");
+              }}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
