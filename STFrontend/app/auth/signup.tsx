@@ -116,9 +116,6 @@ export default function SignupScreen() {
               <Text className="text-3xl font-bold text-gray-900 mb-2">
                 Create Account
               </Text>
-              {errors.global ? (
-                <Text className="text-red-600 mb-2">{errors.global}</Text>
-              ) : null}
               <Text className="text-gray-600 text-lg">
                 Join SubletTinder today!
               </Text>
@@ -256,6 +253,9 @@ export default function SignupScreen() {
                   </Text>
                 ) : null}
               </View>
+              {errors.global ? (
+                <Text className="text-red-600 mb-4">{errors.global}</Text>
+              ) : null}
 
               <TouchableOpacity
                 className={`w-full py-4 rounded-xl items-center mb-4 ${
