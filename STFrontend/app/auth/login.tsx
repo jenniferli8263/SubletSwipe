@@ -39,7 +39,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     setErrors({});
     try {
-      const loginData: LoginData = { email, password };
+      const loginData: LoginData = { email: email.toLowerCase(), password };
       const user = await apiPost("/login", loginData);
       await signIn(user);
       router.replace("/(tabs)");
@@ -96,9 +96,6 @@ export default function LoginScreen() {
                 Sign in to your account
               </Text>
             </View>
-            {errors.global ? (
-              <Text className="text-red-600 mb-2">{errors.global}</Text>
-            ) : null}
 
             {/* Form */}
             <View className="flex-1">
@@ -153,6 +150,9 @@ export default function LoginScreen() {
                   <Text className="text-red-600 mb-2">{errors.password}</Text>
                 ) : null}
               </View>
+              {errors.global ? (
+              <Text className="text-red-600 mb-4">{errors.global}</Text>
+            ) : null}
 
               <TouchableOpacity
                 className={`w-full py-4 rounded-xl items-center mb-4 ${

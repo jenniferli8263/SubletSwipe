@@ -56,7 +56,7 @@ export default function SignupScreen() {
     try {
       const signupData: SignupData = {
         id: 0, // This will be set by the backend
-        email,
+        email: email.toLowerCase(),
         first_name: firstName,
         last_name: lastName,
         password,
