@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Modal, Pressable } from "react-native";
 import { UserCircle2 } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext"; // Adjust import path if needed
 import { useActiveRole } from "@/components/ActiveRoleContext"; // Adjust import path if needed
@@ -8,6 +8,8 @@ import ResourceInfoCard from "@/components/ResourceInfoCard";
 import { useRouter } from "expo-router";
 import Button from "@/components/ui/Button";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { apiDelete } from "@/lib/api";
+
 
 const AccountSidebar: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -23,6 +25,8 @@ const AccountSidebar: React.FC = () => {
   const [resourceInfo, setResourceInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
+
 
   const router = useRouter();
 
@@ -72,7 +76,7 @@ const AccountSidebar: React.FC = () => {
   ];
 
   return (
-    <View className="w-full min-h-screen bg-white p-8">
+    <View className="w-full min-h-screen bg-white p-8 relative">
       <View className="flex-row justify-between align-middle mb-8">
         <View className="flex-row items-center gap-3 mx-2">
           <UserCircle2 size={32} color="black" />
@@ -108,17 +112,59 @@ const AccountSidebar: React.FC = () => {
         Manage Roles
       </Button>
 
-      {/* <View className="flex gap-4">
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => handlePress(item)}
-            activeOpacity={0.6}
-          >
-            <Text className="text-gray-700">{item}</Text>
-          </TouchableOpacity>
-        ))}
-      </View> */}
+      <Button
+        className="rounded-md bg-white border border-red-600 py-3 items-center"
+        onPress={() => setModalVisible(true)}
+      >
+        <Text className="text-red-600 font-bold text-lg">Delete Account</Text>
+      </Button>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}>
+          <View className="bg-white rounded-lg p-6 mx-4 w-80">
+            <Text className="text-lg font-semibold mb-4">
+              Are you sure you want to delete your account?
+            </Text>
+
+            <View className="flex-row justify-end space-x-4">
+              <Pressable
+                onPress={() => setModalVisible(false)}
+                className="px-4 py-2 rounded-md border border-gray-300"
+              >
+                <Text className="text-gray-700">Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={async () => {
+                  setModalVisible(false);
+                  try {
+                    if (!user) throw new Error("User not logged in");
+                    await apiDelete(`/users/${user.id}`);
+                    console.log("User deleted successfully");
+                    signOut();
+                    router.push("/");
+                  } catch (error: any) {
+                    console.error("Failed to delete user:", error.message || error);
+                  }
+                }}
+                className="px-4 py-2 rounded-md bg-red-600"
+              >
+                <Text className="text-white font-bold">Delete</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
