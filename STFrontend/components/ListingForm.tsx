@@ -115,6 +115,7 @@ export default function ListingForm({
   // };
 
   const handleLocalSubmit = async () => {
+    console.log("ListingForm: handleLocalSubmit called", { type, form });
     const newErrors: { [key: string]: string } = {};
 
     if (!form.raw_address) newErrors.raw_address = "Address is required.";
@@ -154,51 +155,34 @@ export default function ListingForm({
     }
 
     if (Object.keys(newErrors).length > 0) {
+      console.log("ListingForm: validation errors", newErrors);
       setErrors(newErrors);
       return;
     }
 
     let uploadedPhotos: UploadedPhoto[] = [];
     try {
-      uploadedPhotos = await uploadPhotosToCloudinary(form.photos);
-  
-      setErrors({});
-      await onSubmit({ ...form, photos: uploadedPhotos as any });
-  
+      // For updates, don't upload existing photos - let the parent handle it
+      if (type === "update") {
+        console.log("ListingForm: update mode, calling onSubmit directly");
+        setErrors({});
+        await onSubmit(form);
+      } else {
+        // For new listings, upload all photos
+        console.log("ListingForm: add mode, uploading photos");
+        uploadedPhotos = await uploadPhotosToCloudinary(form.photos);
+        setErrors({});
+        await onSubmit({ ...form, photos: uploadedPhotos as any });
+      }
     }
     catch (error) {
-      // console.error("Submit failed, cleaning up uploaded photos…", error); 
+      console.log("ListingForm: error in handleLocalSubmit", error);
+      console.error("Submit failed, cleaning up uploaded photos…", error); 
       console.log("uploadedPhotos in catch:", uploadedPhotos);
       await deletePhotosFromCloudinary(uploadedPhotos); 
       setForm((prev) => ({ ...prev, photos: [] })); // <-- Clear photos
       setErrors({ form: "Failed to create listing. Photos have been deleted." });
     }
-    // try {
-    //   const payload = {
-    //     ...form,
-    //     user_id: Number(form.user_id),
-    //     asking_price: Number(form.asking_price),
-    //     num_bedrooms: Number(form.num_bedrooms),
-    //     num_bathrooms: Number(form.num_bathrooms),
-    //     building_type_id: form.building_type_id
-    //       ? Number(form.building_type_id)
-    //       : undefined,
-    //     amenities: form.amenities,
-    //     photos: uploadedPhotos,
-    //     start_date: form.start_date,
-    //     end_date: form.end_date,
-    //     target_gender: form.target_gender || "prefer not to say",
-    //     pet_friendly: Boolean(form.pet_friendly),
-    //     utilities_incl: Boolean(form.utilities_incl),
-    //     description: form.description,
-    //   };
-    //   await apiPost("/listings", payload);
-    //   setMessage("Listing created!");
-    // } catch (e: any) {
-    //   setMessage(e.message || "Error creating listing");
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   return (

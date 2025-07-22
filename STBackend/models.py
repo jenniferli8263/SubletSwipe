@@ -44,6 +44,7 @@ class ListingUpdate(BaseModel):
     description: Optional[str] = None
     amenities: Optional[List[int]] = None
     photos_to_add: Optional[List[Photo]] = None
+    photos_to_update: Optional[List[Photo]] = None
     photos_to_delete: Optional[List[str]] = None
 
 class RenterProfileCreate(BaseModel):

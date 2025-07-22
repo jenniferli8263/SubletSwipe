@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import ListingForm, { ListingFormData } from "@/components/ListingForm";
 import { apiGet, apiPatch } from "@/lib/api";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { uploadPhotosToCloudinary } from "@/lib/imageUtils";
 
 export default function UpdateListingScreen() {
   const { listingId } = useLocalSearchParams();
@@ -17,7 +18,7 @@ export default function UpdateListingScreen() {
   const [errorModalMessage, setErrorModalMessage] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // const [originalPhotos, setOriginalPhotos] = useState<string[]>([]);
+  const [originalPhotos, setOriginalPhotos] = useState<{ url: string; label: string }[]>([]);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -25,12 +26,12 @@ export default function UpdateListingScreen() {
         const listing = await apiGet(`/listings/${listingId}`);
         console.log(listing);
         // Parse photos and amenities
-        // const parsedPhotos = JSON.parse(listing.photos || "[]");
-        // const flatPhotos = parsedPhotos.map((p: any) => p.label);
-
+        const parsedPhotos = JSON.parse(listing.photos || "[]");
+        // Convert to PhotoData for the form
+        const photoDataArray = parsedPhotos.map((p: any) => ({ uri: p.url, label: p.label, base64: "" }));
         const parsedAmenities = JSON.parse(listing.amenity_ids || "[]");
 
-        // setOriginalPhotos(flatPhotos);
+        setOriginalPhotos(parsedPhotos.map((p: any) => ({ url: p.url, label: p.label })));
 
         setInitialValues({
           user_id: listing.user_id, // won't be updated
@@ -45,7 +46,7 @@ export default function UpdateListingScreen() {
           description: listing.description,
           building_type_id: listing.building_type_id.toString() || "", // fallback to name string
           amenities: parsedAmenities,
-          photos: [], //flatPhotos,
+          photos: photoDataArray,
           raw_address: listing.address_string || "", // updated from address_string
         });
       } catch (err) {
@@ -60,14 +61,46 @@ export default function UpdateListingScreen() {
     setLoading(true);
     setMessage("");
     setErrors({});
+    console.log("handleSubmit called with formData", formData);
 
     try {
-      // // Compute added and removed photos
-      // const photos_to_add = formData.photos
-      //   .filter((photo) => !originalPhotos.includes(photo))
-      //   .map((label) => ({ url: label, label }));
+      // Only process valid photos
+      const validPhotos = (formData.photos || []).filter(
+        (p) => typeof p.uri === 'string' && p.uri.length > 0
+      );
+      console.log("validPhotos", validPhotos);
 
-      // const photos_to_delete = originalPhotos.filter((photo) => !formData.photos.includes(photo));
+      // 1. New photos (no url, need upload)
+      const newPhotos = validPhotos.filter(
+        (p) => (!p.uri.startsWith("http")) && typeof p.base64 === 'string' && p.base64.length > 0
+      );
+      console.log("newPhotos", newPhotos);
+
+      // 2. Existing photos with label changes (url exists, label changed)
+      const photosToUpdate = validPhotos.filter((p) => {
+        if (!p.uri.startsWith("http")) return false; // not an existing photo
+        const orig = originalPhotos.find((op) => op.url === p.uri);
+        return orig && orig.label !== p.label;
+      });
+      console.log("photosToUpdate", photosToUpdate);
+
+      // 3. Deleted photos (url in original but not in new)
+      const photosToDelete = originalPhotos
+        .filter((orig) => !validPhotos.some((p) => p.uri === orig.url))
+        .map((orig) => orig.url);
+      console.log("photosToDelete", photosToDelete);
+
+      // Upload only new photos
+      let uploadedPhotos: { url: string; label: string }[] = [];
+      if (newPhotos.length > 0) {
+        uploadedPhotos = await uploadPhotosToCloudinary(newPhotos);
+      }
+      console.log("uploadedPhotos", uploadedPhotos);
+
+      // Build photos_to_add: all with {url, label} (new uploads)
+      const photos_to_add = uploadedPhotos.map((p) => ({ url: p.url, label: p.label }));
+      // Build photos_to_update: all with {url, label} (label changes)
+      const photos_to_update = photosToUpdate.map((p) => ({ url: p.uri, label: p.label }));
 
       const payload = {
         start_date: formData.start_date,
@@ -80,10 +113,11 @@ export default function UpdateListingScreen() {
         utilities_incl: Boolean(formData.utilities_incl),
         description: formData.description,
         amenities: formData.amenities,
-        // photos_to_add,
-        // photos_to_delete,
+        photos_to_add,
+        photos_to_update,
+        photos_to_delete: photosToDelete,
       };
-      console.log(payload);
+      console.log("PATCH payload", payload);
       console.log(listingId);
 
       await apiPatch(`/listings/${listingId}`, payload);
