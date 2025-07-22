@@ -15,6 +15,7 @@ export default function UpdateListingScreen() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // const [originalPhotos, setOriginalPhotos] = useState<string[]>([]);
 
@@ -87,6 +88,7 @@ export default function UpdateListingScreen() {
 
       await apiPatch(`/listings/${listingId}`, payload);
       setMessage("Listing updated!");
+      setShowSuccessModal(true);
     } catch (e: any) {
       let errorMsg = "";
       if (e.message?.includes("chk_term_length")) {
@@ -178,6 +180,30 @@ export default function UpdateListingScreen() {
             <TouchableOpacity
               className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
               onPress={() => setShowErrorModal(false)}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.3)" }}>
+          <View style={{ backgroundColor: "white", padding: 32, borderRadius: 16, alignItems: "center", minWidth: 250 }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 16 }}>
+              Listing updated!
+            </Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace("/(tabs)"); // or router.back() if you want to go back
+              }}
             >
               <Text className="text-white font-bold text-lg">OK</Text>
             </TouchableOpacity>
