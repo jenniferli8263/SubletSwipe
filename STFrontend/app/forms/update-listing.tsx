@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import ListingForm, { ListingFormData } from "@/components/ListingForm";
 import { apiGet, apiPatch } from "@/lib/api";
@@ -13,6 +13,8 @@ export default function UpdateListingScreen() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
 
   // const [originalPhotos, setOriginalPhotos] = useState<string[]>([]);
 
@@ -86,17 +88,38 @@ export default function UpdateListingScreen() {
       await apiPatch(`/listings/${listingId}`, payload);
       setMessage("Listing updated!");
     } catch (e: any) {
+      let errorMsg = "";
       if (e.message?.includes("chk_term_length")) {
         setErrors({
           check_constraint: "The term length should be at least a month.",
         });
+        errorMsg = "The term length should be at least a month.";
       } else if (e.message?.includes("chk_start_date_future")) {
         setErrors({
           check_constraint: "The start date must be in the future.",
         });
+        errorMsg = "The start date must be in the future.";
       } else {
-        setMessage(e.message || "Error updating listing");
+        // Try to parse FastAPI validation error for gender
+        let userFriendlyMsg = null;
+        try {
+          const errObj = JSON.parse(e.message);
+          if (Array.isArray(errObj.detail)) {
+            const missingGender = errObj.detail.find(
+              (d: any) =>
+                d.loc && d.loc.includes("target_gender") &&
+                (d.msg?.toLowerCase().includes("field required") || d.msg?.toLowerCase().includes("input should be"))
+            );
+            if (missingGender) {
+              userFriendlyMsg = "Target gender must be specified.";
+            }
+          }
+        } catch {}
+        setMessage(userFriendlyMsg || e.message || "Error updating listing");
+        errorMsg = userFriendlyMsg || e.message || "Error updating listing";
       }
+      setErrorModalMessage(errorMsg);
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -122,8 +145,45 @@ export default function UpdateListingScreen() {
         message={message}
         submitLabel="Update Listing"
         externalErrors={errors}
-        key={JSON.stringify(errors)}
+        //key={JSON.stringify(errors)}
       />
+      <Modal
+        visible={showErrorModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              minWidth: 250,
+            }}
+          >
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16, color: "#b91c1c" }}
+            >
+              {errorModalMessage}
+            </Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => setShowErrorModal(false)}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

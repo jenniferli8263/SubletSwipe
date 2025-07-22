@@ -5,6 +5,7 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  Modal,
 } from "react-native";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -42,6 +43,8 @@ export default function RenterProfileSubletScreen() {
   const [buildingTypes, setBuildingTypes] = useState<
     Array<{ value: number; label: string }>
   >([]);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
 
   useEffect(() => {
     const loadBuildingTypesOptions = async () => {
@@ -108,6 +111,8 @@ export default function RenterProfileSubletScreen() {
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setErrorModalMessage(Object.values(newErrors)[0]);
+      setShowErrorModal(true);
       return;
     }
     setLoading(true);
@@ -135,21 +140,42 @@ export default function RenterProfileSubletScreen() {
         router.replace("/(tabs)");
       }, 1500);
     } catch (e: any) {
+      let errorMsg = "";
       if (e.message && e.message.includes("chk_term_length")) {
         setErrors((prev) => ({
           ...prev,
           check_constraint: "The term length should be at least a month.",
         }));
+        errorMsg = "The term length should be at least a month.";
         setMessage("");
       } else if (e.message && e.message.includes("chk_start_date_future")) {
         setErrors((prev) => ({
           ...prev,
           check_constraint: "The start date must be in the future.",
         }));
+        errorMsg = "The start date must be in the future.";
         setMessage("");
       } else {
-        setMessage(e.message || "Error creating profile");
+        // Try to parse FastAPI validation error for gender
+        let userFriendlyMsg = null;
+        try {
+          const errObj = JSON.parse(e.message);
+          if (Array.isArray(errObj.detail)) {
+            const missingGender = errObj.detail.find(
+              (d: any) =>
+                d.loc && (d.loc.includes("gender") || d.loc.includes("target_gender")) &&
+                (d.msg?.toLowerCase().includes("field required") || d.msg?.toLowerCase().includes("input should be"))
+            );
+            if (missingGender) {
+              userFriendlyMsg = "Target gender must be specified.";
+            }
+          }
+        } catch {}
+        setMessage(userFriendlyMsg || e.message || "Error creating profile");
+        errorMsg = userFriendlyMsg || e.message || "Error creating profile";
       }
+      setErrorModalMessage(errorMsg);
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -279,6 +305,43 @@ export default function RenterProfileSubletScreen() {
           </Button>
         </View>
       </View>
+      <Modal
+        visible={showErrorModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              minWidth: 250,
+            }}
+          >
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16, color: "#b91c1c" }}
+            >
+              {errorModalMessage}
+            </Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => setShowErrorModal(false)}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
