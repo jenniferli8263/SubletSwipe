@@ -428,7 +428,7 @@ async def get_collaborative_recommendations(current_renter_id: int):
     SELECT
       l.id,
       l.user_id,
-      u.first_name,
+      u.first_name AS lister_name,
       u.last_name,
       u.email,
       u.profile_photo,
