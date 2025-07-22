@@ -1,4 +1,4 @@
-const BASE_URL = 'https://parrot-superb-incredibly.ngrok-free.app'; // Change to your backend URL if needed
+const BASE_URL = 'https://53cb86c02c05.ngrok-free.app'; // Change to your backend URL if needed
 
 export async function apiGet(path: string) {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -37,6 +37,18 @@ export async function apiPatch(path: string, data?: any) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function apiDelete(path: string, data?: any) {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+    body: data ? JSON.stringify(data) : undefined,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  if (res.status !== 204) return res.json();
+  return null;
+}
+
 
 
 // Authentication API functions
