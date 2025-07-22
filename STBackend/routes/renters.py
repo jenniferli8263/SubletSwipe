@@ -1,10 +1,14 @@
 from fastapi import APIRouter, HTTPException, status
 from models import RenterProfileCreate, RenterProfileUpdate
 from asyncpg import CheckViolationError, PostgresError
-from utils.location_helper import resolve_address_from_google, insert_location_if_not_exists
+from utils.location_helper import (
+    resolve_address_from_google,
+    insert_location_if_not_exists,
+)
 from db import get_pool
 
 router = APIRouter()
+
 
 @router.post("/renters", status_code=status.HTTP_201_CREATED)
 async def create_renter_profile(profile: RenterProfileCreate):
@@ -28,7 +32,8 @@ async def create_renter_profile(profile: RenterProfileCreate):
                 RETURNING *
             """
 
-            row = await connection.fetchrow(query,
+            row = await connection.fetchrow(
+                query,
                 profile.user_id,
                 location_id,
                 profile.start_date,
@@ -40,21 +45,28 @@ async def create_renter_profile(profile: RenterProfileCreate):
                 profile.num_bedrooms,
                 profile.num_bathrooms,
                 profile.has_pet,
-                profile.bio
+                profile.bio,
             )
 
             if not row:
-                raise HTTPException(status_code=500, detail="Renter profile insert failed")
+                raise HTTPException(
+                    status_code=500, detail="Renter profile insert failed"
+                )
 
             return {"message": "Renter profile created", "id": row["id"]}
 
     except Exception as e:
-        if 'renter_profiles_user_id_key' in str(e):
-            raise HTTPException(status_code=400, detail="User already has a renter profile.")
-        elif 'chk_' in str(e):
-            raise HTTPException(status_code=400, detail=f"Constraint violation: {str(e)}")
+        if "renter_profiles_user_id_key" in str(e):
+            raise HTTPException(
+                status_code=400, detail="User already has a renter profile."
+            )
+        elif "chk_" in str(e):
+            raise HTTPException(
+                status_code=400, detail=f"Constraint violation: {str(e)}"
+            )
         else:
             raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
+
 
 @router.get("/renters/{renter_id}")
 async def get_renter_profile(renter_id: int):
@@ -94,6 +106,7 @@ async def get_renter_profile(renter_id: int):
             raise HTTPException(status_code=404, detail="Renter profile not found")
         return dict(row)
 
+
 @router.put("/renters/{renter_id}/deactivate/{user_id}")
 async def deactivate_renter_profile(renter_id: int, user_id: int):
     query = """
@@ -107,15 +120,21 @@ async def deactivate_renter_profile(renter_id: int, user_id: int):
     async with pool.acquire() as connection:
         row = await connection.fetchrow(query, renter_id, user_id)
         if not row:
-            raise HTTPException(status_code=404, detail="Renter profile not found or user not authorized")
+            raise HTTPException(
+                status_code=404,
+                detail="Renter profile not found or user not authorized",
+            )
         return dict(row)
-     
+
+
 @router.patch("/renters/{renter_id}")
 async def update_renter_profile(renter_id: int, profile: RenterProfileUpdate):
     pool = await get_pool()
     async with pool.acquire() as connection:
         async with connection.transaction():
-            existing = await connection.fetchrow("SELECT * FROM renter_profiles WHERE id = $1", renter_id)
+            existing = await connection.fetchrow(
+                "SELECT * FROM renter_profiles WHERE id = $1", renter_id
+            )
             if not existing:
                 raise HTTPException(status_code=404, detail="Renter profile not found")
 
@@ -123,24 +142,58 @@ async def update_renter_profile(renter_id: int, profile: RenterProfileUpdate):
             if profile.raw_address:
                 try:
                     place_data = await resolve_address_from_google(profile.raw_address)
-                    locations_id = await insert_location_if_not_exists(connection, place_data)
+                    locations_id = await insert_location_if_not_exists(
+                        connection, place_data
+                    )
                 except Exception as e:
-                    raise HTTPException(status_code=400, detail=f"Failed to resolve address: {str(e)}")
+                    raise HTTPException(
+                        status_code=400, detail=f"Failed to resolve address: {str(e)}"
+                    )
             else:
                 locations_id = existing["locations_id"]
 
             updated_values = {
                 "locations_id": locations_id,
-                "start_date": profile.start_date if profile.start_date is not None else existing["start_date"],
-                "end_date": profile.end_date if profile.end_date is not None else existing["end_date"],
+                "start_date": (
+                    profile.start_date
+                    if profile.start_date is not None
+                    else existing["start_date"]
+                ),
+                "end_date": (
+                    profile.end_date
+                    if profile.end_date is not None
+                    else existing["end_date"]
+                ),
                 "age": profile.age if profile.age is not None else existing["age"],
-                "gender": profile.gender.value if profile.gender is not None else existing["gender"],
-                "budget": profile.budget if profile.budget is not None else existing["budget"],
-                "building_type_id": profile.building_type_id if profile.building_type_id is not None else existing["building_type_id"],
-                "num_bedrooms": profile.num_bedrooms if profile.num_bedrooms is not None else existing["num_bedrooms"],
-                "num_bathrooms": profile.num_bathrooms if profile.num_bathrooms is not None else existing["num_bathrooms"],
-                "has_pet": profile.has_pet if profile.has_pet is not None else existing["has_pet"],
-                "bio": profile.bio if profile.bio is not None else existing["bio"]
+                "gender": (
+                    profile.gender.value
+                    if profile.gender is not None
+                    else existing["gender"]
+                ),
+                "budget": (
+                    profile.budget if profile.budget is not None else existing["budget"]
+                ),
+                "building_type_id": (
+                    profile.building_type_id
+                    if profile.building_type_id is not None
+                    else existing["building_type_id"]
+                ),
+                "num_bedrooms": (
+                    profile.num_bedrooms
+                    if profile.num_bedrooms is not None
+                    else existing["num_bedrooms"]
+                ),
+                "num_bathrooms": (
+                    profile.num_bathrooms
+                    if profile.num_bathrooms is not None
+                    else existing["num_bathrooms"]
+                ),
+                "has_pet": (
+                    profile.has_pet
+                    if profile.has_pet is not None
+                    else existing["has_pet"]
+                ),
+                "bio": profile.bio if profile.bio is not None else existing["bio"],
             }
 
             update_query = """
@@ -160,7 +213,9 @@ async def update_renter_profile(renter_id: int, profile: RenterProfileUpdate):
             """
 
             try:
-                await connection.execute(update_query, *updated_values.values(), renter_id)
+                await connection.execute(
+                    update_query, *updated_values.values(), renter_id
+                )
             except CheckViolationError as e:
                 msg = str(e)
                 if "chk_age_min" in msg:
@@ -173,7 +228,9 @@ async def update_renter_profile(renter_id: int, profile: RenterProfileUpdate):
                     detail = "Invalid data provided."
                 raise HTTPException(status_code=400, detail=detail)
             except PostgresError:
-                raise HTTPException(status_code=500, detail="A database error occurred.")
+                raise HTTPException(
+                    status_code=500, detail="A database error occurred."
+                )
 
     return {"message": "Renter profile updated successfully"}
 
@@ -239,6 +296,26 @@ ORDER BY score DESC;
         rows = await connection.fetch(query, renter_id)
         if not rows:
             return {"matches": [], "message": "No matches found for this renter"}
-        
+
         matches = [dict(row) for row in rows]
         return {"matches": matches, "count": len(matches)}
+
+
+@router.put("/renters/{renter_id}/reactivate/{user_id}")
+async def reactivate_renter_profile(renter_id: int, user_id: int):
+    query = """
+        UPDATE renter_profiles
+        SET is_active = TRUE
+        WHERE id = $1 AND user_id = $2
+        RETURNING *
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        row = await connection.fetchrow(query, renter_id, user_id)
+        if not row:
+            raise HTTPException(
+                status_code=404,
+                detail="Renter profile not found or user not authorized",
+            )
+        return dict(row)

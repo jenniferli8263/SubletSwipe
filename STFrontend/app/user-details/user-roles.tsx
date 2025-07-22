@@ -92,6 +92,7 @@ function SectionCard({
     }
   };
   const deactivate = async () => {
+    if (isActiveRole) return;
     try {
       if (isRenter) {
         await apiPut(`/renters/${resourceInfo.id}/deactivate/${user?.id}`);
@@ -102,6 +103,19 @@ function SectionCard({
       if (reloadRoles) reloadRoles();
     } catch (e) {
       console.error("Failed to deactivate", e);
+    }
+  };
+  const reactivate = async () => {
+    try {
+      if (isRenter) {
+        await apiPut(`/renters/${resourceInfo.id}/reactivate/${user?.id}`);
+      }
+      if (!isRenter) {
+        await apiPut(`/listings/${resourceInfo.id}/reactivate/${user?.id}`);
+      }
+      if (reloadRoles) reloadRoles();
+    } catch (e) {
+      console.error("Failed to reactivate", e);
     }
   };
   const setActive = () => {
@@ -157,16 +171,19 @@ function SectionCard({
           <MaterialIcons name="edit" size={28} color="#fff" />
         </Pressable>
         <Pressable
-          onPress={deactivate}
-          disabled={isActiveRole}
+          onPress={resourceInfo.is_active ? deactivate : reactivate}
           className={
             "flex-1  justify-center items-center px-4 h-full m-0 " +
             (!isActiveRole && resourceInfo.is_active
               ? "bg-red-800"
-              : "bg-gray-400")
+              : "bg-green-800")
           }
         >
-          <MaterialIcons name="delete" size={28} color="#fff" />
+          <MaterialIcons
+            name={resourceInfo.is_active ? "delete" : "check-circle"}
+            size={28}
+            color="#fff"
+          />
         </Pressable>
       </Animated.View>
     </View>

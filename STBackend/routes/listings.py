@@ -194,6 +194,25 @@ async def deactivate_listing(listing_id: int, user_id: int):
         return dict(row)
 
 
+@router.put("/listings/{listing_id}/reactivate/{user_id}")
+async def reactivate_listing(listing_id: int, user_id: int):
+    query = """
+        UPDATE listings
+        SET is_active = TRUE
+        WHERE id = $1 AND user_id = $2
+        RETURNING *
+    """
+
+    pool = await get_pool()
+    async with pool.acquire() as connection:
+        row = await connection.fetchrow(query, listing_id, user_id)
+        if not row:
+            raise HTTPException(
+                status_code=404, detail="Listing not found or user not authorized"
+            )
+        return dict(row)
+
+
 @router.patch("/listings/{listing_id}")
 async def partial_update_listing(listing_id: int, listing: ListingUpdate):
     pool = await get_pool()
