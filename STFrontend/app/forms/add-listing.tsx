@@ -14,6 +14,8 @@ export default function AddListingScreen() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
   const { setRole, fetchResources } = useActiveRole();
 
   const handleSubmit = async (formData: any): Promise<void> => {
@@ -53,21 +55,42 @@ export default function AddListingScreen() {
         setRole({ isRenter: false, resourceId: response.id });
       }
     } catch (e: any) {
+      let errorMsg = "";
       if (e.message && e.message.includes("chk_term_length")) {
         setErrors((prev) => ({
           ...prev,
           check_constraint: "The term length should be at least a month.",
         }));
+        errorMsg = "The term length should be at least a month.";
         setMessage("");
       } else if (e.message && e.message.includes("chk_start_date_future")) {
         setErrors((prev) => ({
           ...prev,
           check_constraint: "The start date must be in the future.",
         }));
+        errorMsg = "The start date must be in the future.";
         setMessage("");
       } else {
-        setMessage(e.message || "Error creating listing");
+        // Try to parse FastAPI validation error for gender
+        let userFriendlyMsg = null;
+        try {
+          const errObj = JSON.parse(e.message);
+          if (Array.isArray(errObj.detail)) {
+            const missingGender = errObj.detail.find(
+              (d: any) =>
+                d.loc && d.loc.includes("target_gender") &&
+                (d.msg?.toLowerCase().includes("field required") || d.msg?.toLowerCase().includes("input should be"))
+            );
+            if (missingGender) {
+              userFriendlyMsg = "Target gender must be specified.";
+            }
+          }
+        } catch {}
+        setMessage(userFriendlyMsg || e.message || "Error creating listing");
+        errorMsg = userFriendlyMsg || e.message || "Error creating listing";
       }
+      setErrorModalMessage(errorMsg);
+      setShowErrorModal(true);
       throw e;
     } finally {
       setLoading(false);
@@ -102,7 +125,7 @@ export default function AddListingScreen() {
         message={message}
         submitLabel="Create Listing"
         externalErrors={errors} // ← ✅ This is what's missing
-        key={JSON.stringify(errors)} // optional: ensures fresh rerender
+        // key={JSON.stringify(errors)} // optional: ensures fresh rerender
       />
       <Modal
         visible={showSuccessModal}
@@ -138,6 +161,43 @@ export default function AddListingScreen() {
                 setShowSuccessModal(false);
                 router.replace("/(tabs)");
               }}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={showErrorModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              minWidth: 250,
+            }}
+          >
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16, color: "#b91c1c" }}
+            >
+              {errorModalMessage}
+            </Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => setShowErrorModal(false)}
             >
               <Text className="text-white font-bold text-lg">OK</Text>
             </TouchableOpacity>

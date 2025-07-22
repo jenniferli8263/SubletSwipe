@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Image,
   TouchableOpacity,
+  Modal,
 } from "react-native";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -30,6 +31,8 @@ export default function RenterProfilePersonalScreen() {
   const [genderOptions, setGenderOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
 
   useEffect(() => {
     const loadGenderOptions = async () => {
@@ -66,6 +69,8 @@ export default function RenterProfilePersonalScreen() {
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setErrorModalMessage(Object.values(newErrors)[0]);
+      setShowErrorModal(true);
       return;
     }
     setErrors({});
@@ -169,6 +174,43 @@ export default function RenterProfilePersonalScreen() {
           <Button onPress={handleNext}>Next</Button>
         </View>
       </KeyboardAvoidingView>
+      <Modal
+        visible={showErrorModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowErrorModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              minWidth: 250,
+            }}
+          >
+            <Text
+              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16, color: "#b91c1c" }}
+            >
+              {errorModalMessage}
+            </Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => setShowErrorModal(false)}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
