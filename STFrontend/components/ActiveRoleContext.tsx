@@ -76,7 +76,17 @@ export const ActiveRoleProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (!user || hasAutoDetected) return;
+    if (!user) {
+      setIsRenter(true);
+      setResourceId(0);
+      setHasUserSetRole(false);
+      setHasAutoDetected(false);
+      setListingIds([]);
+      setRenterProfileId(null);
+      return;
+    }
+
+    // if (hasAutoDetected) return;
     fetchResources();
   }, [user, hasUserSetRole, hasAutoDetected]);
 
