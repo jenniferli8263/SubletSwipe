@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   LayoutChangeEvent,
 } from "react-native";
+import Modal from 'react-native-modal';
+import ConfettiCannon from "react-native-confetti-cannon";
 import Swiper from "react-native-deck-swiper";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -14,6 +16,7 @@ import { useRouter } from "expo-router";
 import ListingCardContent from "./ListingCardContent";
 import RenterCardContent from "./RenterCardContent";
 import Button from "./ui/Button";
+import { apiPost } from "@/lib/api";
 
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
@@ -60,13 +63,59 @@ export default function HomePageSwiper({
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [hasShownRecommendations, setHasShownRecommendations] = useState(false);
   const bottomBarHeight = useBottomTabBarHeight();
+  const [matchPopupVisible, setMatchPopupVisible] = useState(false);
+  const [matchedUserName, setMatchedUserName] = useState<string | null>(null);
+  const [confettiTrigger, setConfettiTrigger] = useState(false);
+
+
+  const sendSwipe = async (targetId: number, isRight: boolean) => {
+    if (!resourceId) return;
+
+    const path = isRenter
+      ? `/swipes/renter/${resourceId}`
+      : `/swipes/listing/${resourceId}`;
+
+    try {
+      const result = await apiPost(path, {
+        target_id: targetId,
+        is_right: isRight,
+      });
+
+      console.log("Swipe recorded:", result);
+      if (result.match) {
+        console.log("matched!");
+        const target = matches.find((m) =>
+          isRenter ? m.id === targetId : m.renter_id === targetId
+        );
+        setMatchedUserName(
+          isRenter ? target?.landlord_name ?? "a landlord" : target?.first_name ?? "a renter"
+        );
+        setMatchPopupVisible(true);
+        setConfettiTrigger(true);
+      }
+      else{
+        console.log("success but not matched");
+      }
+    } catch (err: any) {
+      console.error("Swipe error:", err.message || err);
+    }
+  };
+
 
   const handleSwipeLeft = (i: number) => {
-    console.log("swiped left on ", matches[i]);
+    const match  = matches[i];
+    const targetId = isRenter ? match.id : match.renter_id;
+    if (targetId) {
+      sendSwipe(targetId, false);
+    }
   };
 
   const handleSwipeRight = (i: number) => {
-    console.log("swiped right on ", matches[i]);
+    const match  = matches[i];
+    const targetId = isRenter ? match.id : match.renter_id;
+    if (targetId) {
+      sendSwipe(targetId, true);
+    }
   };
 
   const handleGetRecommendations = async () => {
@@ -159,6 +208,35 @@ export default function HomePageSwiper({
             disableBottomSwipe
             verticalSwipe={false}
             horizontalSwipe={true}
+          />
+        )}
+        <Modal isVisible={matchPopupVisible}
+            animationIn="bounceIn"
+            animationOut="fadeOut"
+            onBackdropPress={() => setMatchPopupVisible(false)}>
+          <View className="bg-white rounded-2xl px-6 py-8 justify-center items-center">
+            <MaterialIcons name="favorite" size={48} color="#10B981" />
+            <Text className="text-2xl font-bold text-gray-800 mt-4">It's a Match!</Text>
+            <Text className="text-md text-gray-500 mt-2 text-center">
+              You matched with {matchedUserName}, check the matches tab for more details
+            </Text>
+            <TouchableOpacity
+              className="mt-6 px-6 py-3 bg-green-500 rounded-full"
+              onPress={() => setMatchPopupVisible(false)}
+            >
+              <Text className="text-white font-semibold text-base">Awesome!</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+        {confettiTrigger && (
+          <ConfettiCannon
+            
+            count={100}
+            origin={{ x: 200, y: 0 }}
+            fadeOut
+            explosionSpeed={350}
+            fallSpeed={2500}
+            onAnimationEnd={() => setConfettiTrigger(false)}
           />
         )}
       </View>

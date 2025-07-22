@@ -14,6 +14,8 @@ import ListingCardContent from "@/components/ListingCardContent";
 import RenterCardContent from "@/components/RenterCardContent";
 import { useActiveRole } from "@/components/ActiveRoleContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 export default function MutualMatchesScreen() {
   const [matches, setMatches] = useState<any[]>([]);
@@ -23,95 +25,97 @@ export default function MutualMatchesScreen() {
   const { user } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchMatchesWithDetails = async () => {
-      // console.log("fetchMatchesWithDetails called");
-      // console.log("user:", user, "type:", typeof user);
-      // console.log("resourceId:", resourceId, "type:", typeof resourceId);
-      // console.log("isRenter:", isRenter, "type:", typeof isRenter);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchMatchesWithDetails = async () => {
+        // console.log("fetchMatchesWithDetails called");
+        // console.log("user:", user, "type:", typeof user);
+        // console.log("resourceId:", resourceId, "type:", typeof resourceId);
+        // console.log("isRenter:", isRenter, "type:", typeof isRenter);
 
-      // if (!user || resourceId === 0) {
-      //   console.log("Early return - missing user or resourceId is 0");
-      //   console.log("!user:", !user);
-      //   console.log("resourceId === 0:", resourceId === 0);
-      //   return;
-      // }
+        // if (!user || resourceId === 0) {
+        //   console.log("Early return - missing user or resourceId is 0");
+        //   console.log("!user:", !user);
+        //   console.log("resourceId === 0:", resourceId === 0);
+        //   return;
+        // }
 
-      try {
-        // Use current user's resourceId instead of hardcoded value
-        // console.log(
-        //   `/mutual-matches/${isRenter ? "renter" : "listing"}/${resourceId}`
-        // );
-        const data = await apiGet(
-          `/mutual-matches/${isRenter ? "renter" : "listing"}/${resourceId}`
-        );
-        //console.log("API response:", data);
+        try {
+          // Use current user's resourceId instead of hardcoded value
+          // console.log(
+          //   `/mutual-matches/${isRenter ? "renter" : "listing"}/${resourceId}`
+          // );
+          const data = await apiGet(
+            `/mutual-matches/${isRenter ? "renter" : "listing"}/${resourceId}`
+          );
+          //console.log("API response:", data);
 
-        // Handle different response structures based on user role
-        let listingIds: number[] = [];
-        let renterProfileIds: number[] = [];
+          // Handle different response structures based on user role
+          let listingIds: number[] = [];
+          let renterProfileIds: number[] = [];
 
-        if (isRenter) {
-          // Renters get listing_ids in response
-          listingIds = data.listing_ids || [];
-        } else {
-          // Landlords get renter_profile_ids
-          renterProfileIds = data.renter_profile_ids || [];
-          //console.log("Renter profile IDs:", renterProfileIds);
-        }
-
-        if (
-          (isRenter && listingIds.length === 0) ||
-          (!isRenter && renterProfileIds.length === 0)
-        ) {
-          setMatches([]);
-        } else {
           if (isRenter) {
-            // For renters: fetch detailed listing information
-            const detailedListings = await Promise.all(
-              listingIds.map((id) => apiGet(`/listings/${id}`))
-            );
-            // Simplified photo parsing for each listing
-            const listingsWithPhotoUrl = detailedListings.map((match) => {
-              const photos =
-                typeof match.photos === "string"
-                  ? JSON.parse(match.photos)
-                  : match.photos || [];
-              return {
-                ...match,
-                photo_url:
-                  photos && photos.length > 0 ? photos[0].url : undefined,
-              };
-            });
-            setMatches(listingsWithPhotoUrl);
+            // Renters get listing_ids in response
+            listingIds = data.listing_ids || [];
           } else {
-            // For landlords: fetch detailed renter information
-            const detailedRenters = await Promise.all(
-              renterProfileIds.map((id) => apiGet(`/renters/${id}`))
-            );
-            // console.log("Detailed renters data:", detailedRenters);
-            // console.log("First renter match structure:", detailedRenters[0]);
-
-            // Transform renter data to match RenterCardContent expected format
-            const transformedRenters = detailedRenters.map((renter) => ({
-              ...renter,
-              renter_first_name: renter.first_name,
-              renter_last_name: renter.last_name,
-              renter_profile_photo: renter.profile_photo,
-            }));
-
-            setMatches(transformedRenters);
+            // Landlords get renter_profile_ids
+            renterProfileIds = data.renter_profile_ids || [];
+            //console.log("Renter profile IDs:", renterProfileIds);
           }
-        }
-      } catch (e: any) {
-        setError(e.message || "Failed to load matches.");
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchMatchesWithDetails();
-  }, [user, resourceId, isRenter]);
+          if (
+            (isRenter && listingIds.length === 0) ||
+            (!isRenter && renterProfileIds.length === 0)
+          ) {
+            setMatches([]);
+          } else {
+            if (isRenter) {
+              // For renters: fetch detailed listing information
+              const detailedListings = await Promise.all(
+                listingIds.map((id) => apiGet(`/listings/${id}`))
+              );
+              // Simplified photo parsing for each listing
+              const listingsWithPhotoUrl = detailedListings.map((match) => {
+                const photos =
+                  typeof match.photos === "string"
+                    ? JSON.parse(match.photos)
+                    : match.photos || [];
+                return {
+                  ...match,
+                  photo_url:
+                    photos && photos.length > 0 ? photos[0].url : undefined,
+                };
+              });
+              setMatches(listingsWithPhotoUrl);
+            } else {
+              // For landlords: fetch detailed renter information
+              const detailedRenters = await Promise.all(
+                renterProfileIds.map((id) => apiGet(`/renters/${id}`))
+              );
+              // console.log("Detailed renters data:", detailedRenters);
+              // console.log("First renter match structure:", detailedRenters[0]);
+
+              // Transform renter data to match RenterCardContent expected format
+              const transformedRenters = detailedRenters.map((renter) => ({
+                ...renter,
+                renter_first_name: renter.first_name,
+                renter_last_name: renter.last_name,
+                renter_profile_photo: renter.profile_photo,
+              }));
+
+              setMatches(transformedRenters);
+            }
+          }
+        } catch (e: any) {
+          setError(e.message || "Failed to load matches.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchMatchesWithDetails();
+    }, [user, resourceId, isRenter])
+  );
 
   if (loading) {
     return (
