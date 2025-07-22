@@ -307,10 +307,27 @@ async def partial_update_listing(listing_id: int, listing: ListingUpdate):
                         listing.photos_to_delete,
                     )
 
+                if listing.photos_to_update:
+                    for photo in listing.photos_to_update:
+                        await connection.execute(
+                            "UPDATE photos SET label = $1 WHERE listing_id = $2 AND url = $3",
+                            photo.label, listing_id, photo.url
+                        )
+
                 if listing.photos_to_add:
-                    await insert_listing_photos_bulk(
-                        connection, listing_id, listing.photos_to_add
-                    )
+                    for photo in listing.photos_to_add:
+                        if photo.url:
+                            # Try to update label for existing photo
+                            result = await connection.execute(
+                                """UPDATE photos SET label = $1 WHERE listing_id = $2 AND url = $3""",
+                                photo.label, listing_id, photo.url
+                            )
+                            # If no row was updated, insert as new
+                            if result == "UPDATE 0":
+                                await connection.execute(
+                                    """INSERT INTO photos (listing_id, url, label) VALUES ($1, $2, $3)""",
+                                    listing_id, photo.url, photo.label
+                                )
 
             except Exception as e:
                 raise HTTPException(

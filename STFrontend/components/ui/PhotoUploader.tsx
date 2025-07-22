@@ -96,7 +96,12 @@ export default function PhotoUploader({
 
   // Upload (add or update) photo
   const handleUpload = async () => {
-    if (!currentPhoto || !currentPhoto.uri || !currentPhoto.base64) {
+    if (!currentPhoto || !currentPhoto.uri) {
+      Alert.alert("No photo selected", "Please select a photo to upload.");
+      return;
+    }
+    const isNewPhoto = !currentPhoto.uri.startsWith("http");
+    if (isNewPhoto && !currentPhoto.base64) {
       Alert.alert("No photo selected", "Please select a photo to upload.");
       return;
     }
