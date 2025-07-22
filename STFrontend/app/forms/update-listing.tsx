@@ -4,6 +4,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import ListingForm, { ListingFormData } from "@/components/ListingForm";
 import { apiGet, apiPatch } from "@/lib/api";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Modal } from "react-native";
+
 
 export default function UpdateListingScreen() {
   const { listingId } = useLocalSearchParams();
@@ -13,6 +15,7 @@ export default function UpdateListingScreen() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // const [originalPhotos, setOriginalPhotos] = useState<string[]>([]);
 
@@ -84,7 +87,7 @@ export default function UpdateListingScreen() {
       console.log(listingId);
 
       await apiPatch(`/listings/${listingId}`, payload);
-      setMessage("Listing updated!");
+      setShowSuccessModal(true);
     } catch (e: any) {
       if (e.message?.includes("chk_term_length")) {
         setErrors({
@@ -124,6 +127,29 @@ export default function UpdateListingScreen() {
         externalErrors={errors}
         key={JSON.stringify(errors)}
       />
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.3)" }}>
+          <View style={{ backgroundColor: "white", padding: 32, borderRadius: 16, alignItems: "center", minWidth: 250 }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 16 }}>
+              Listing updated!
+            </Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace("/(tabs)"); // or router.back() if you want to go back
+              }}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
