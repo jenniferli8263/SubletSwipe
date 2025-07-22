@@ -54,11 +54,11 @@ BEGIN
               WHERE rol.renter_profile_id = renter_id
                 AND rol.listing_id = l.id
           )
-          AND NOT EXISTS (
-              SELECT 1 FROM listing_on_renter lor
-              WHERE lor.listing_id = l.id
-                AND lor.renter_profile_id = renter_id
-          )
+        --   AND NOT EXISTS (
+        --       SELECT 1 FROM listing_on_renter lor
+        --       WHERE lor.listing_id = l.id
+        --         AND lor.renter_profile_id = renter_id
+        --   )
     )
     SELECT * FROM base
     WHERE base.distance_km < 50;
@@ -116,11 +116,11 @@ BEGIN
           AND r.start_date >= l.start_date - 15
           AND r.end_date <= l.end_date + 15
           AND (NOT r.has_pet OR l.pet_friendly)
-          AND NOT EXISTS (
-              SELECT 1 FROM renter_on_listing rol
-              WHERE rol.renter_profile_id = r.id
-                AND rol.listing_id = l.id
-          )
+        --   AND NOT EXISTS (
+        --       SELECT 1 FROM renter_on_listing rol
+        --       WHERE rol.renter_profile_id = r.id
+        --         AND rol.listing_id = l.id
+        --   )
           AND NOT EXISTS (
               SELECT 1 FROM listing_on_renter lor
               WHERE lor.listing_id = l.id
