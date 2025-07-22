@@ -124,6 +124,7 @@ export default function ListingForm({
     if (!form.num_bedrooms) newErrors.num_bedrooms = "Number of bedrooms is required.";
     if (!form.num_bathrooms) newErrors.num_bathrooms = "Number of bathrooms is required.";
     if (!form.building_type_id) newErrors.building_type_id = "Building type is required.";
+    if (!form.target_gender) newErrors.target_gender = "Please select a target gender.";
 
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (form.start_date && !dateRegex.test(form.start_date)) {
@@ -319,6 +320,9 @@ export default function ListingForm({
             options={genderOptions}
             searchable={false}
           />
+          {errors.target_gender && (
+            <Text className="text-red-600 mb-2">{errors.target_gender}</Text>
+          )}
         </View>
         <View className="flex-row items-center mb-4 mt-4">
           <Checkbox
@@ -344,7 +348,7 @@ export default function ListingForm({
           className="mb-4"
         />
         <Button onPress={handleLocalSubmit} disabled={loading}>
-          {loading ? "Submitting..." : "Create Listing"}
+          {loading ? "Submitting..." : submitLabel}
         </Button>
         {!!message && (
           <Text className="mt-4 text-center text-green-700 font-bold">
