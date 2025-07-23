@@ -198,7 +198,9 @@ export default function ListingDetailsPage() {
             Description
           </Text>
           <Text className="text-base text-gray-700 leading-relaxed">
-            {listing.description}
+            {listing.description && listing.description.trim() !== ""
+              ? listing.description
+              : "No description provided."}
           </Text>
         </View>
         {amenities.length > 0 && (
@@ -271,7 +273,7 @@ export default function ListingDetailsPage() {
             onPress={() => router.push(`/profile/${listing.user_id}` as any)}
             className="flex-row items-center"
           >
-            {listing.profile_photo !== "NaN" ? (
+            {listing.profile_photo !== null ? (
               <Image
                 source={{ uri: listing.profile_photo }}
                 className="w-12 h-12 rounded-full mr-4 bg-gray-200"
