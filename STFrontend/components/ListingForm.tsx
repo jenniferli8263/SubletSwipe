@@ -177,7 +177,7 @@ export default function ListingForm({
     }
     catch (error) {
       console.log("ListingForm: error in handleLocalSubmit", error);
-      console.error("Submit failed, cleaning up uploaded photos…", error); 
+      // console.error("Submit failed, cleaning up uploaded photos…", error); 
       console.log("uploadedPhotos in catch:", uploadedPhotos);
       await deletePhotosFromCloudinary(uploadedPhotos); 
       setForm((prev) => ({ ...prev, photos: [] })); // <-- Clear photos
