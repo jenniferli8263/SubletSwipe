@@ -81,6 +81,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
         <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
           <View className="flex-1 px-8 pt-8">
@@ -151,8 +152,8 @@ export default function LoginScreen() {
                 ) : null}
               </View>
               {errors.global ? (
-              <Text className="text-red-600 mb-4">{errors.global}</Text>
-            ) : null}
+                <Text className="text-red-600 mb-4">{errors.global}</Text>
+              ) : null}
 
               <TouchableOpacity
                 className={`w-full py-4 rounded-xl items-center mb-4 ${

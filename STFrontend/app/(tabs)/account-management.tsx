@@ -136,10 +136,10 @@ const AccountSidebar: React.FC = () => {
               Are you sure you want to delete your account?
             </Text>
 
-            <View className="flex-row justify-end space-x-4">
+            <View className="flex-row justify-between space-x-4 j">
               <Pressable
                 onPress={() => setModalVisible(false)}
-                className="px-4 py-2 rounded-md border border-gray-300"
+                className="flex-1 px-4 py-3 m-2 rounded-md border-2 border-gray-300 items-center justify-center"
               >
                 <Text className="text-gray-700">Cancel</Text>
               </Pressable>
@@ -160,7 +160,7 @@ const AccountSidebar: React.FC = () => {
                     );
                   }
                 }}
-                className="px-4 py-2 mx-2 rounded-md bg-red-600"
+                className="flex-1 px-4 py-3 m-2 rounded-md bg-red-600 items-center justify-center"
               >
                 <Text className="text-white font-bold">Delete</Text>
               </Pressable>

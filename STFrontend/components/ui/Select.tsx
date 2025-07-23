@@ -12,6 +12,7 @@ import {
   Animated,
   Easing,
   SafeAreaView,
+  Keyboard,
 } from "react-native";
 
 interface Option {
@@ -27,7 +28,7 @@ interface SelectProps {
   className?: string;
   searchPlaceholder?: string;
   searchable?: boolean;
-  disabled?: boolean; 
+  disabled?: boolean;
 }
 
 const Select = ({
@@ -38,7 +39,7 @@ const Select = ({
   className = "",
   searchPlaceholder = "Search...",
   searchable = true,
-  disabled = false
+  disabled = false,
 }: SelectProps) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState("");
@@ -85,8 +86,13 @@ const Select = ({
       {/* Main select box */}
       <TouchableOpacity
         className={`mb-3 border rounded-xl px-3 py-4 min-h-[42px] justify-center 
-          ${disabled ? "bg-gray-200 border-gray-200" : "bg-gray-100 border-gray-300"} ${className}`}
+          ${
+            disabled
+              ? "bg-gray-200 border-gray-200"
+              : "bg-gray-100 border-gray-300"
+          } ${className}`}
         onPress={() => {
+          Keyboard.dismiss();
           if (!disabled) setModalVisible(true);
         }}
         activeOpacity={disabled ? 1 : 0.8}

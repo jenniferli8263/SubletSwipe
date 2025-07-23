@@ -78,8 +78,10 @@ export default function AddListingScreen() {
           if (Array.isArray(errObj.detail)) {
             const missingGender = errObj.detail.find(
               (d: any) =>
-                d.loc && d.loc.includes("target_gender") &&
-                (d.msg?.toLowerCase().includes("field required") || d.msg?.toLowerCase().includes("input should be"))
+                d.loc &&
+                d.loc.includes("target_gender") &&
+                (d.msg?.toLowerCase().includes("field required") ||
+                  d.msg?.toLowerCase().includes("input should be"))
             );
             if (missingGender) {
               userFriendlyMsg = "Target gender must be specified.";
@@ -134,6 +136,7 @@ export default function AddListingScreen() {
         onRequestClose={() => setShowSuccessModal(false)}
       >
         <View
+          className="flex-1 justify-center items-center"
           style={{
             flex: 1,
             justifyContent: "center",
@@ -142,17 +145,15 @@ export default function AddListingScreen() {
           }}
         >
           <View
+            className="rounded-lg"
             style={{
               backgroundColor: "white",
               padding: 32,
-              borderRadius: 16,
               alignItems: "center",
               minWidth: 250,
             }}
           >
-            <Text
-              style={{ fontSize: 20, fontWeight: "bold", marginBottom: 16 }}
-            >
+            <Text className="text-center text-lg font-bold mb-4">
               Listing created!
             </Text>
             <TouchableOpacity
@@ -182,16 +183,21 @@ export default function AddListingScreen() {
           }}
         >
           <View
+            className="rounded-lg"
             style={{
               backgroundColor: "white",
               padding: 32,
-              borderRadius: 16,
               alignItems: "center",
               minWidth: 250,
             }}
           >
             <Text
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16, color: "#b91c1c" }}
+              className="text-center text-lg"
+              style={{
+                fontWeight: "bold",
+                marginBottom: 16,
+                color: "#b91c1c",
+              }}
             >
               {errorModalMessage}
             </Text>

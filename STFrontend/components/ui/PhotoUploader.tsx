@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, TextInput, Alert, Modal, Pressable, StyleSheet, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { PhotoData } from "@/lib/imageUtils";
@@ -13,15 +24,15 @@ interface PhotoUploaderProps {
   className?: string;
 }
 
-const windowWidth = Dimensions.get('window').width;
+const windowWidth = Dimensions.get("window").width;
 const MODAL_SIZE = Math.min(windowWidth * 0.85, 350);
 const SQUARE_SIZE = MODAL_SIZE * 0.7;
 
-export default function PhotoUploader({ 
-  photos, 
-  onPhotosChange, 
+export default function PhotoUploader({
+  photos,
+  onPhotosChange,
   maxPhotos = 10,
-  className = ""
+  className = "",
 }: PhotoUploaderProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState<PhotoData | null>(null);
@@ -65,18 +76,18 @@ export default function PhotoUploader({
     setUploading(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
-        base64: true
+        base64: true,
       });
       if (!result.canceled && result.assets.length > 0) {
         const image = result.assets[0];
         setCurrentPhoto({
           uri: image.uri,
           label: currentPhoto?.label || "",
-          base64: image.base64 || ""
+          base64: image.base64 || "",
         });
       }
     } catch (error) {
@@ -118,19 +129,29 @@ export default function PhotoUploader({
         const manipResult = await ImageManipulator.manipulateAsync(
           currentPhoto.uri,
           [{ resize: { width: 1200, height: 1200 } }],
-          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+          {
+            compress: 0.7,
+            format: ImageManipulator.SaveFormat.JPEG,
+            base64: true,
+          }
         );
         photoToUpload = {
           uri: manipResult.uri,
           label: currentPhoto.label,
-          base64: manipResult.base64 || ""
+          base64: manipResult.base64 || "",
         };
         if (photoToUpload.base64.length > MAX_BASE64_LENGTH) {
-          Alert.alert("Photo too large", "Could not compress photo under 10MB. Please choose a smaller image.");
+          Alert.alert(
+            "Photo too large",
+            "Could not compress photo under 10MB. Please choose a smaller image."
+          );
           return;
         }
       } catch (err) {
-        Alert.alert("Compression failed", "Could not compress photo. Please try a different image.");
+        Alert.alert(
+          "Compression failed",
+          "Could not compress photo. Please try a different image."
+        );
         return;
       }
     }
@@ -176,8 +197,8 @@ export default function PhotoUploader({
           {photos.length}/{maxPhotos}
         </Text>
       </View>
-      <Button 
-        onPress={handleAddPhoto} 
+      <Button
+        onPress={handleAddPhoto}
         disabled={uploading || photos.length >= maxPhotos}
         className="mb-4"
       >
@@ -197,14 +218,18 @@ export default function PhotoUploader({
           <View style={styles.modalBox}>
             {/* Square area for image */}
             <Pressable
-              style={[styles.square, { borderColor: '#888', borderWidth: 2, marginBottom: 16 }]}
+              className="bg-gray-100 my-4 rounded-lg flex flew-row items-center justify-center"
+              style={[styles.square]}
               onPress={pickImage}
               disabled={uploading}
             >
               {currentPhoto && currentPhoto.uri ? (
-                <Image source={{ uri: currentPhoto.uri }} style={styles.squareImg} />
+                <Image
+                  source={{ uri: currentPhoto.uri }}
+                  style={styles.squareImg}
+                />
               ) : (
-                <Text style={{ color: '#888', textAlign: 'center' }}>
+                <Text style={{ color: "#888", textAlign: "center" }}>
                   Click here to add a photo
                 </Text>
               )}
@@ -214,21 +239,32 @@ export default function PhotoUploader({
               placeholder="Label"
               value={currentPhoto?.label || ""}
               onChangeText={handleLabelChange}
-              className="mb-4"
-              style={{ width: '100%' }}
+              className="mb-u"
+              style={{ width: SQUARE_SIZE }}
             />
             {/* Upload & Delete buttons */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Button onPress={handleUpload} className="flex-1 mr-2">
+            <View className="pt-4 w-full">
+              <Button
+                onPress={handleUpload}
+                className="rounded-lg w-full border-green-800 border-2"
+              >
                 {editingIndex !== null ? "Update" : "Upload"}
               </Button>
-              <Button onPress={handleDelete} className="flex-1 ml-2">
-                Delete
-              </Button>
+              <View className="flex flex-row justify-between w-full pt-2">
+                <Button
+                  onPress={handleCloseModal}
+                  className="flex-1 rounded-lg bg-white border-gray-400 border-2"
+                >
+                  <Text className="text-gray-500">Cancel</Text>
+                </Button>
+                <Button
+                  onPress={handleDelete}
+                  className="flex-1 ml-2 rounded-lg bg-white border-red-600 border-2"
+                >
+                  <Text className="text-red-600">Delete</Text>
+                </Button>
+              </View>
             </View>
-            <Button onPress={handleCloseModal} className="mt-4">
-              Cancel
-            </Button>
           </View>
         </View>
       </Modal>
@@ -245,7 +281,9 @@ export default function PhotoUploader({
               className="w-24 h-24 rounded-lg"
               style={{ resizeMode: "cover" }}
             />
-            <Text className="mt-1 text-xs text-center max-w-[96px]">{photo.label}</Text>
+            <Text className="mt-1 text-xs text-center max-w-[96px]">
+              {photo.label}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -256,17 +294,17 @@ export default function PhotoUploader({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalBox: {
     width: MODAL_SIZE,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -275,16 +313,16 @@ const styles = StyleSheet.create({
   square: {
     width: SQUARE_SIZE,
     height: SQUARE_SIZE,
-    borderRadius: 12,
-    backgroundColor: '#f3f3f3',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    // borderRadius: 12,
+    // backgroundColor: "#f3f3f3",
+    // justifyContent: "center",
+    // alignItems: "center",
+    // overflow: "hidden",
   },
   squareImg: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 12,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
-}); 
+});

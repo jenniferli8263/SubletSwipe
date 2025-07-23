@@ -83,8 +83,9 @@ export default function RenterProfilePersonalScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
         <TouchableOpacity onPress={() => router.back()} className="p-2 mx-2">
           <MaterialIcons name="arrow-back" size={24} color="#166534" />

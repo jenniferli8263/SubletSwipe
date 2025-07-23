@@ -9,6 +9,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from "react-native";
 import { apiGet } from "@/lib/api";
 import Input from "./ui/Input";
@@ -110,6 +111,7 @@ export function AddressAutocomplete({
     <View className="mb-2">
       <TouchableOpacity
         onPress={() => {
+          Keyboard.dismiss();
           if (!disabled) setModalVisible(true);
         }}
         activeOpacity={disabled ? 1 : 0.8}
@@ -146,7 +148,7 @@ export function AddressAutocomplete({
           onPress={handleModalClose}
         />
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ justifyContent: "flex-end" }}
         >
           <View

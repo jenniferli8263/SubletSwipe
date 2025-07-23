@@ -4,6 +4,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Platform,
   SafeAreaView,
 } from "react-native";
 import { apiGet, apiPost } from "@/lib/api";

@@ -11,6 +11,7 @@ import {
   Platform,
   Animated,
   Easing,
+  Keyboard,
 } from "react-native";
 import Checkbox from "./Checkbox";
 
@@ -108,7 +109,10 @@ const MultiSelect = ({
       {/* Main select box */}
       <TouchableOpacity
         className={`mb-3 bg-gray-100 border border-gray-300 rounded px-3 py-4 min-h-[42px] justify-center ${className}`}
-        onPress={() => setModalVisible(true)}
+        onPress={() => {
+          Keyboard.dismiss();
+          setModalVisible(true);
+        }}
         activeOpacity={0.8}
       >
         <Text className={"text-[#888]"}>{placeholder}</Text>
