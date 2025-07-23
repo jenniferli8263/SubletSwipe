@@ -45,6 +45,7 @@ export default function RenterProfileSubletScreen() {
   >([]);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorModalMessage, setErrorModalMessage] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     const loadBuildingTypesOptions = async () => {
@@ -135,10 +136,7 @@ export default function RenterProfileSubletScreen() {
         setRole({ isRenter: true, resourceId: response.id });
       }
       setMessage("Renter profile created!");
-      // Navigate to index tab after successful submission
-      setTimeout(() => {
-        router.replace("/(tabs)");
-      }, 1500);
+      setShowSuccessModal(true);
     } catch (e: any) {
       let errorMsg = "";
       if (e.message && e.message.includes("chk_term_length")) {
@@ -163,8 +161,10 @@ export default function RenterProfileSubletScreen() {
           if (Array.isArray(errObj.detail)) {
             const missingGender = errObj.detail.find(
               (d: any) =>
-                d.loc && (d.loc.includes("gender") || d.loc.includes("target_gender")) &&
-                (d.msg?.toLowerCase().includes("field required") || d.msg?.toLowerCase().includes("input should be"))
+                d.loc &&
+                (d.loc.includes("gender") || d.loc.includes("target_gender")) &&
+                (d.msg?.toLowerCase().includes("field required") ||
+                  d.msg?.toLowerCase().includes("input should be"))
             );
             if (missingGender) {
               userFriendlyMsg = "Target gender must be specified.";
@@ -184,17 +184,14 @@ export default function RenterProfileSubletScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View className="flex-1 bg-white">
+        <TouchableOpacity onPress={() => router.back()} className="p-2 mx-2">
+          <MaterialIcons name="arrow-back" size={24} color="#166534" />
+        </TouchableOpacity>
         <ScrollView
           className="flex-1 p-8"
           contentContainerStyle={{ paddingBottom: 120 }}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mb-4 p-2 mr-2"
-          >
-            <MaterialIcons name="arrow-back" size={24} color="#166534" />
-          </TouchableOpacity>
           <Text className="text-4xl font-bold mb-6">Sublet Info</Text>
           <View className="py-2">
             <Text className="mb-1 font-medium">Desired Location</Text>
@@ -329,13 +326,64 @@ export default function RenterProfileSubletScreen() {
             }}
           >
             <Text
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16, color: "#b91c1c" }}
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 16,
+                color: "#b91c1c",
+              }}
             >
               {errorModalMessage}
             </Text>
             <TouchableOpacity
               className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
               onPress={() => setShowErrorModal(false)}
+            >
+              <Text className="text-white font-bold text-lg">OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              minWidth: 250,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 16,
+                color: "#166534",
+              }}
+            >
+              Renter profile created!
+            </Text>
+            <TouchableOpacity
+              className="mb-2 rounded-lg bg-green-800 px-4 py-3 items-center"
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.replace("/(tabs)");
+              }}
             >
               <Text className="text-white font-bold text-lg">OK</Text>
             </TouchableOpacity>

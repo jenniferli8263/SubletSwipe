@@ -86,14 +86,11 @@ export default function RenterProfilePersonalScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
+        <TouchableOpacity onPress={() => router.back()} className="p-2 mx-2">
+          <MaterialIcons name="arrow-back" size={24} color="#166534" />
+        </TouchableOpacity>
         <ScrollView className="flex-1 bg-white p-8">
           <View className="bg-white">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="mb-4 p-2 mr-2"
-            >
-              <MaterialIcons name="arrow-back" size={24} color="#166534" />
-            </TouchableOpacity>
             <Text className="text-4xl font-bold mb-6">Personal Info</Text>
             {/* Profile Picture and Name (Uneditable) */}
             {user && (
@@ -198,7 +195,12 @@ export default function RenterProfilePersonalScreen() {
             }}
           >
             <Text
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16, color: "#b91c1c" }}
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 16,
+                color: "#b91c1c",
+              }}
             >
               {errorModalMessage}
             </Text>

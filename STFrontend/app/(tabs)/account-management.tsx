@@ -10,7 +10,6 @@ import Button from "@/components/ui/Button";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { apiDelete } from "@/lib/api";
 
-
 const AccountSidebar: React.FC = () => {
   const { user, signOut } = useAuth();
   const {
@@ -26,7 +25,6 @@ const AccountSidebar: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
-
 
   const router = useRouter();
 
@@ -125,12 +123,14 @@ const AccountSidebar: React.FC = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={{
+        <View
+          style={{
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: "rgba(0,0,0,0.3)",
-          }}>
+          }}
+        >
           <View className="bg-white rounded-lg p-6 mx-4 w-80">
             <Text className="text-lg font-semibold mb-4">
               Are you sure you want to delete your account?
@@ -154,10 +154,13 @@ const AccountSidebar: React.FC = () => {
                     signOut();
                     router.push("/");
                   } catch (error: any) {
-                    console.error("Failed to delete user:", error.message || error);
+                    console.error(
+                      "Failed to delete user:",
+                      error.message || error
+                    );
                   }
                 }}
-                className="px-4 py-2 rounded-md bg-red-600"
+                className="px-4 py-2 mx-2 rounded-md bg-red-600"
               >
                 <Text className="text-white font-bold">Delete</Text>
               </Pressable>

@@ -62,7 +62,7 @@ export default function ListingDetailsPage() {
     }
   }
   // Parse amenities field
-  let amenities: string[] = [];
+  let amenities: { id: number; name: string }[] = [];
   if (listing.amenities) {
     if (typeof listing.amenities === "string") {
       try {
@@ -211,12 +211,12 @@ export default function ListingDetailsPage() {
                 Amenities
               </Text>
               <View className="flex-row flex-wrap">
-                {amenities.map((a: string, idx: number) => (
+                {amenities.map((a) => (
                   <Text
-                    key={idx}
+                    key={a.id}
                     className="bg-green-700 text-white px-3 py-1 rounded-full mr-2 mb-2 text-xs font-semibold"
                   >
-                    {a}
+                    {a.name}
                   </Text>
                 ))}
               </View>

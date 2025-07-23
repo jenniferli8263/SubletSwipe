@@ -149,17 +149,12 @@ async def get_listing(listing_id: int):
                 WHERE p.listing_id = l.id), '[]'
             ) AS photos,
             COALESCE(
-                (SELECT json_agg(a.name)
+                (SELECT json_agg(json_build_object('id', a.id, 'name', a.name))
                 FROM listing_amenities la
                 JOIN amenities a ON la.amenity_id = a.id
-                WHERE la.listing_id = l.id), '[]'
-            ) AS amenities,
-            COALESCE(
-                (SELECT json_agg(a.id)
-                FROM listing_amenities la
-                JOIN amenities a ON la.amenity_id = a.id
-                WHERE la.listing_id = l.id), '[]'
-            ) AS amenity_ids
+                WHERE la.listing_id = l.id
+                ), '[]'
+            ) AS amenities
         FROM listings l
         JOIN users u ON l.user_id = u.id
         JOIN locations loc ON l.locations_id = loc.id
