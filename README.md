@@ -1,25 +1,4 @@
 # 🏠 SubletTinder
-
-# Milestone 1
-## Where to find C2 and C3
-The SQL code we used for creating our tables is under the path `STBackend/database_setup/SQLQueries/`. You can also find the SQL queries for our 5 basic features in this directory, along with the corresponding output.
-
-## How to create/load the sample database
-Our database is hosted on the cloud using Neon, simply follow the steps below to run a local backend server which will automatically connect you to the database.
-
-## How to generate "production" dataset and load into database
-The full Production dataset is in `STBackend/data/prod.xlsx`. The data is already loaded into our Neon production database; the connection string for this can be found at the end of our report. The python script used to load clean and load the data in `prod.xlsx` can be found at `STBackend/data/insert_data.ipynb`. Running all blocks in the jupyter notebook will clean then re-populate the production database on Neon.
-
-## 💡 Current Features
-- Add a listing: `STBackend/routes/listings.py`
-- Get details of a listing: `STBackend/routes/listings.py`
-- Deactivate a listing: `STBackend/routes/listings.py`
-- User signup and login: `STBackend/routes/auth.py`
-- Delete a user: `STBackend/routes/users.py`
-
-We have implemented endpoints on the backend for these features. See below on how to run a local server and test the features via the backend.
-The first three features have also been implemented on our frontend.
-
 ## 🛠️ How to run the backend
 1. Clone the repo into your local machine.
 ```
