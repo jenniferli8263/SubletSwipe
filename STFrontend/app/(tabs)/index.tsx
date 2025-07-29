@@ -44,7 +44,44 @@ export default function TabsHome() {
     try {
       const data = await apiGet(`/listings/recommendations/${resourceId}`);
       console.log("Recommendations:", data);
-      setMatches(data.recommendations || []);
+
+      // Process recommendations to parse photos field
+      const processedRecommendations = (data.recommendations || []).map(
+        (listing: any) => {
+          let photos: any[] = [];
+          if (listing.photos) {
+            if (typeof listing.photos === "string") {
+              try {
+                photos = JSON.parse(listing.photos);
+              } catch {
+                photos = [];
+              }
+            } else if (Array.isArray(listing.photos)) {
+              photos = listing.photos;
+            }
+          }
+
+          // Extract first photo URL for ListingCardContent
+          let photoUrl = null;
+          if (photos.length > 0 && photos[0].url) {
+            photoUrl = photos[0].url;
+          }
+
+          console.log("Processed listing:", {
+            id: listing.id,
+            photos: photos,
+            photoUrl: photoUrl,
+          });
+
+          return {
+            ...listing,
+            photos: photos,
+            photo_url: photoUrl,
+          };
+        }
+      );
+
+      setMatches(processedRecommendations);
     } catch (e: any) {
       setError(e.message || "Error fetching recommendations");
     } finally {

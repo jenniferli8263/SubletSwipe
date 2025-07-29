@@ -306,7 +306,9 @@ async def partial_update_listing(listing_id: int, listing: ListingUpdate):
                     for photo in listing.photos_to_update:
                         await connection.execute(
                             "UPDATE photos SET label = $1 WHERE listing_id = $2 AND url = $3",
-                            photo.label, listing_id, photo.url
+                            photo.label,
+                            listing_id,
+                            photo.url,
                         )
 
                 if listing.photos_to_add:
@@ -315,13 +317,17 @@ async def partial_update_listing(listing_id: int, listing: ListingUpdate):
                             # Try to update label for existing photo
                             result = await connection.execute(
                                 """UPDATE photos SET label = $1 WHERE listing_id = $2 AND url = $3""",
-                                photo.label, listing_id, photo.url
+                                photo.label,
+                                listing_id,
+                                photo.url,
                             )
                             # If no row was updated, insert as new
                             if result == "UPDATE 0":
                                 await connection.execute(
                                     """INSERT INTO photos (listing_id, url, label) VALUES ($1, $2, $3)""",
-                                    listing_id, photo.url, photo.label
+                                    listing_id,
+                                    photo.url,
+                                    photo.label,
                                 )
 
             except Exception as e:
@@ -438,51 +444,11 @@ async def get_collaborative_recommendations(current_renter_id: int):
 
     -- Return top recommendations with listing details
     SELECT
-      l.id,
-      l.user_id,
-      u.first_name AS lister_name,
-      u.last_name,
-      u.email,
-      u.profile_photo,
-      l.locations_id,
-      l.is_active,
-      l.start_date,
-      l.end_date,
-      l.target_gender,
-      l.asking_price,
-      l.num_bedrooms,
-      l.num_bathrooms,
-      l.pet_friendly,
-      l.utilities_incl,
-      l.description,
-      loc.address_string,
-      loc.latitude,
-      loc.longitude,
-      bt.id AS building_type_id,
-      bt.type AS building_type,
-      COALESCE(
-        (SELECT json_agg(json_build_object('url', p.url, 'label', p.label))
-        FROM photos p
-        WHERE p.listing_id = l.id), '[]'
-      ) AS photos,
-      COALESCE(
-        (SELECT json_agg(a.name)
-        FROM listing_amenities la
-        JOIN amenities a ON la.amenity_id = a.id
-        WHERE la.listing_id = l.id), '[]'
-      ) AS amenities,
-      COALESCE(
-        (SELECT json_agg(a.id)
-        FROM listing_amenities la
-        JOIN amenities a ON la.amenity_id = a.id
-        WHERE la.listing_id = l.id), '[]'
-      ) AS amenity_ids,
+      l.*,
       sr.score
     FROM scored_recs AS sr
-    JOIN listings AS l ON l.id = sr.listing_id
-    JOIN users u ON l.user_id = u.id
-    JOIN locations loc ON l.locations_id = loc.id
-    LEFT JOIN building_types bt ON l.building_type_id = bt.id
+    JOIN listings AS l
+      ON l.id = sr.listing_id
     WHERE l.is_active = TRUE
     ORDER BY sr.score DESC, l.start_date ASC
     LIMIT 10;
@@ -498,7 +464,24 @@ async def get_collaborative_recommendations(current_renter_id: int):
                     "message": "No recommendations found. Try swiping on more listings to get personalized recommendations.",
                 }
 
-            recommendations = [dict(row) for row in rows]
+            # Get full listing details for each recommended listing
+            recommendations = []
+            for row in rows:
+                listing_id = row["id"]
+                score = row["score"]
+
+                # Get full listing details using the existing get_listing endpoint
+                listing_details = await get_listing(listing_id)
+                if listing_details:
+                    # Rename first_name to lister_name
+                    if "first_name" in listing_details:
+                        listing_details["lister_name"] = listing_details.pop(
+                            "first_name"
+                        )
+
+                    listing_details["score"] = score
+                    recommendations.append(listing_details)
+
             return {
                 "recommendations": recommendations,
                 "count": len(recommendations),
