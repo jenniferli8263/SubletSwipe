@@ -1,4 +1,4 @@
-# 🏠 SubletSwipe
+# 🏠 LeaseMatch
 ## 🛠️ How to run the backend
 1. Clone the repo into your local machine.
 ```
