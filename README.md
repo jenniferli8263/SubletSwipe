@@ -1,4 +1,4 @@
-# 🏠 SubletTinder
+# 🏠 SubletSwipe
 ## 🛠️ How to run the backend
 1. Clone the repo into your local machine.
 ```
